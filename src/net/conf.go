@@ -98,7 +98,12 @@ func initConfVal() {
 		confVal.nss = parseNSSConfFile("/etc/nsswitch.conf")
 	}
 
-	confVal.resolv = dnsReadConfig("/etc/resolv.conf")
+	if runtime.GOOS == "haiku" {
+		confVal.resolv = dnsReadConfig("/boot/system/settings/network/resolv.conf")
+	} else {
+		confVal.resolv = dnsReadConfig("/etc/resolv.conf")
+	}
+
 	if confVal.resolv.err != nil && !os.IsNotExist(confVal.resolv.err) &&
 		!os.IsPermission(confVal.resolv.err) {
 		// If we can't read the resolv.conf file, assume it

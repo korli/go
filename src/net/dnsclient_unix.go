@@ -17,6 +17,7 @@ package net
 import (
 	"context"
 	"errors"
+	"internal/goos"
 	"internal/itoa"
 	"io"
 	"os"
@@ -338,7 +339,11 @@ func (conf *resolverConfig) init() {
 	// resolv.conf twice the first time.
 	conf.dnsConfig = systemConf().resolv
 	if conf.dnsConfig == nil {
-		conf.dnsConfig = dnsReadConfig("/etc/resolv.conf")
+		if goos.GOOS == "haiku" {
+			conf.dnsConfig = dnsReadConfig("/boot/system/settings/network/resolv.conf")
+		} else {
+			conf.dnsConfig = dnsReadConfig("/etc/resolv.conf")
+		}
 	}
 	conf.lastChecked = time.Now()
 

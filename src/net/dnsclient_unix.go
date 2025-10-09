@@ -17,10 +17,10 @@ package net
 import (
 	"context"
 	"errors"
-	"internal/goos"
 	"internal/itoa"
 	"io"
 	"os"
+	"runtime"
 	"sync"
 	"time"
 

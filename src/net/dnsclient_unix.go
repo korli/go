@@ -339,7 +339,7 @@ func (conf *resolverConfig) init() {
 	// resolv.conf twice the first time.
 	conf.dnsConfig = systemConf().resolv
 	if conf.dnsConfig == nil {
-		if goos.GOOS == "haiku" {
+		if runtime.GOOS == "haiku" {
 			conf.dnsConfig = dnsReadConfig("/boot/system/settings/network/resolv.conf")
 		} else {
 			conf.dnsConfig = dnsReadConfig("/etc/resolv.conf")

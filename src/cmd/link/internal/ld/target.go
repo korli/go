@@ -176,6 +176,11 @@ func (t *Target) IsOpenbsd() bool {
 	return t.HeadType == objabi.Hopenbsd
 }
 
+func (t *Target) IsHaiku() bool {
+	t.mustSetHeadType()
+	return t.HeadType == objabi.Hhaiku
+}
+
 func (t *Target) mustSetHeadType() {
 	if t.HeadType == objabi.Hunknown {
 		panic("HeadType is not set")
@@ -193,7 +198,7 @@ func (t *Target) IsBigEndian() bool {
 func (t *Target) UsesLibc() bool {
 	t.mustSetHeadType()
 	switch t.HeadType {
-	case objabi.Haix, objabi.Hdarwin, objabi.Hopenbsd, objabi.Hsolaris, objabi.Hwindows:
+	case objabi.Haix, objabi.Hdarwin, objabi.Hhaiku, objabi.Hopenbsd, objabi.Hsolaris, objabi.Hwindows:
 		// platforms where we use libc for syscalls.
 		return true
 	}

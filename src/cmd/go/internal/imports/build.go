@@ -314,6 +314,7 @@ var KnownOS = map[string]bool{
 	"darwin":    true,
 	"dragonfly": true,
 	"freebsd":   true,
+	"haiku":     true,
 	"hurd":      true,
 	"illumos":   true,
 	"ios":       true,
@@ -337,6 +338,7 @@ var unixOS = map[string]bool{
 	"darwin":    true,
 	"dragonfly": true,
 	"freebsd":   true,
+	"haiku":     true,
 	"hurd":      true,
 	"illumos":   true,
 	"ios":       true,
@@ -372,3 +374,4 @@ var KnownArch = map[string]bool{
 	"sparc64":     true,
 	"wasm":        true,
 }
+

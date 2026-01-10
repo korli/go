@@ -63,6 +63,7 @@ func Init() (*sys.Arch, ld.Arch) {
 
 		Linuxdynld:   "/lib/ld-linux.so.2",
 		Freebsddynld: "/usr/libexec/ld-elf.so.1",
+		Haikudynld:   "XXX",
 		Openbsddynld: "/usr/libexec/ld.so",
 		Netbsddynld:  "/usr/libexec/ld.elf_so",
 		Solarisdynld: "/lib/ld.so.1",

@@ -36,7 +36,7 @@ func TestExecutable(t *testing.T) {
 	// forge argv[0] for child, so that we can verify we could correctly
 	// get real path of the executable without influenced by argv[0].
 	cmd.Args = []string{"-", "-test.run=XXXX"}
-	if runtime.GOOS == "openbsd" || runtime.GOOS == "aix" {
+	if runtime.GOOS == "openbsd" || runtime.GOOS == "aix" || runtime.GOOS == "haiku" {
 		// OpenBSD and AIX rely on argv[0]
 		cmd.Args[0] = fn
 	}
@@ -90,7 +90,7 @@ func init() {
 func TestExecutableDeleted(t *testing.T) {
 	testenv.MustHaveExec(t)
 	switch runtime.GOOS {
-	case "windows", "plan9":
+	case "windows", "plan9", "haiku":
 		t.Skipf("%v does not support deleting running binary", runtime.GOOS)
 	case "openbsd", "freebsd", "aix":
 		t.Skipf("%v does not support reading deleted binary name", runtime.GOOS)

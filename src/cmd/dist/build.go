@@ -89,6 +89,7 @@ var okgoos = []string{
 	"android",
 	"solaris",
 	"freebsd",
+	"haiku",
 	"nacl", // keep;
 	"netbsd",
 	"openbsd",
@@ -946,6 +947,7 @@ var unixOS = map[string]bool{
 	"darwin":    true,
 	"dragonfly": true,
 	"freebsd":   true,
+	"haiku":     true,
 	"hurd":      true,
 	"illumos":   true,
 	"ios":       true,
@@ -1558,6 +1560,7 @@ var cgoEnabled = map[string]bool{
 	"freebsd/amd64":   true,
 	"freebsd/arm":     true,
 	"freebsd/arm64":   true,
+	"haiku/amd64":     false,
 	"illumos/amd64":   true,
 	"linux/386":       true,
 	"linux/amd64":     true,

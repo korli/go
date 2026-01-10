@@ -189,6 +189,12 @@ illumos_amd64)
 	mksysnum=
 	mktypes="GOARCH=$GOARCH go tool cgo -godefs"
 	;;
+haiku_amd64)
+	mksyscall="go run mksyscall_haiku.go"
+	mkerrors="$mkerrors -m64"
+	mksysnum=
+	mktypes="GOARCH=$GOARCH go tool cgo -godefs"
+	;;
 *)
 	echo 'unrecognized $GOOS_$GOARCH: ' "$GOOSARCH" 1>&2
 	exit 1

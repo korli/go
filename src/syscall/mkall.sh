@@ -165,6 +165,12 @@ freebsd_arm64)
 	# API consistent between platforms.
 	mktypes="GOARCH=$GOARCH go tool cgo -godefs -- -fsigned-char"
 	;;
+haiku_amd64)
+	mksyscall="./mksyscall_haiku.pl"
+	mkerrors="$mkerrors -m64"
+	mksysnum=
+	mktypes="GOARCH=$GOARCH go tool cgo -godefs"
+	;;
 linux_386)
 	mkerrors="$mkerrors -m32"
 	mksyscall="./mksyscall.pl -l32"

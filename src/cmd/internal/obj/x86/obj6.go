@@ -51,6 +51,7 @@ func CanUse1InsnTLS(ctxt *obj.Link) bool {
 		switch ctxt.Headtype {
 		case objabi.Hlinux,
 			objabi.Hplan9,
+			objabi.Hhaiku,
 			objabi.Hwindows:
 			return false
 		}
@@ -121,7 +122,7 @@ func progedit(ctxt *obj.Link, p *obj.Prog, newprog obj.ProgAlloc) {
 		// TODO(rsc): Remove the Hsolaris special case. It exists only to
 		// guarantee we are producing byte-identical binaries as before this code.
 		// But it should be unnecessary.
-		if (p.As == AMOVQ || p.As == AMOVL) && p.From.Type == obj.TYPE_REG && p.From.Reg == REG_TLS && p.To.Type == obj.TYPE_REG && REG_AX <= p.To.Reg && p.To.Reg <= REG_R15 && ctxt.Headtype != objabi.Hsolaris {
+		if (p.As == AMOVQ || p.As == AMOVL) && p.From.Type == obj.TYPE_REG && p.From.Reg == REG_TLS && p.To.Type == obj.TYPE_REG && REG_AX <= p.To.Reg && p.To.Reg <= REG_R15 && ctxt.Headtype != objabi.Hsolaris && ctxt.Headtype != objabi.Hhaiku {
 			obj.Nopout(p)
 		}
 		if p.From.Type == obj.TYPE_MEM && p.From.Index == REG_TLS && REG_AX <= p.From.Reg && p.From.Reg <= REG_R15 {

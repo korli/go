@@ -17,12 +17,14 @@ import _ "unsafe" // for go:linkname
 //go:cgo_import_dynamic libc_ioctl ioctl "libroot.so"
 //go:cgo_import_dynamic libc_setgid setgid "libroot.so"
 //go:cgo_import_dynamic libc_setgroups setgroups "libroot.so"
+//go:cgo_import_dynamic libc_setrlimit setrlimit "libroot.so"
 //go:cgo_import_dynamic libc_setsid setsid "libroot.so"
 //go:cgo_import_dynamic libc_setuid setuid "libroot.so"
 //go:cgo_import_dynamic libc_setpgid setpgid "libroot.so"
 //go:cgo_import_dynamic libc__kern_generic_syscall _kern_generic_syscall "libroot.so"
 //go:cgo_import_dynamic libc_fork fork "libroot.so"
 //go:cgo_import_dynamic libc_wait4 wait4#LIBBSD_1_BETA3 "libbsd.so"
+//go:cgo_import_dynamic libc_issetugid issetugid "libbsd.so"
 
 //go:linkname libc_chdir libc_chdir
 //go:linkname libc_chroot libc_chroot
@@ -35,9 +37,11 @@ import _ "unsafe" // for go:linkname
 //go:linkname libc_ioctl libc_ioctl
 //go:linkname libc_setgid libc_setgid
 //go:linkname libc_setgroups libc_setgroups
+//go:linkname libc_setrlimit libc_setrlimit
 //go:linkname libc_setsid libc_setsid
 //go:linkname libc_setuid libc_setuid
 //go:linkname libc_setpgid libc_setpgid
 //go:linkname libc__kern_generic_syscall libc__kern_generic_syscall
 //go:linkname libc_fork libc_fork
 //go:linkname libc_wait4 libc_wait4
+//go:linkname libc_issetugid libc_issetugid

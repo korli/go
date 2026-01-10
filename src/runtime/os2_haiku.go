@@ -441,8 +441,9 @@ func nanotime1() int64 {
 }
 
 //go:nosplit
-func fcntl(fd, cmd, arg int32) int32 {
-	return int32(sysvicall3(&libc_fcntl, uintptr(fd), uintptr(cmd), uintptr(arg)))
+func fcntl(fd, cmd, arg int32) (ret int32, errno int32) {
+	r1, err := sysvicall3Err(&libc_fcntl, uintptr(fd), uintptr(cmd), uintptr(arg))
+	return int32(r1), int32(err)
 }
 
 //go:nosplit
@@ -452,8 +453,10 @@ func closeonexec(fd int32) {
 
 //go:nosplit
 func setNonblock(fd int32) {
-	flags := fcntl(fd, _F_GETFL, 0)
-	fcntl(fd, _F_SETFL, flags|_O_NONBLOCK)
+	flags, _ := fcntl(fd, _F_GETFL, 0)
+	if flags != -1 {
+		fcntl(fd, _F_SETFL, flags|_O_NONBLOCK)
+	}
 }
 
 //go:nosplit

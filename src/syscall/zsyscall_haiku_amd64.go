@@ -49,8 +49,8 @@ import "unsafe"
 //go:cgo_import_dynamic libc_Open open "libroot.so"
 //go:cgo_import_dynamic libc_Openat openat "libroot.so"
 //go:cgo_import_dynamic libc_Pathconf pathconf "libroot.so"
-//go:cgo_import_dynamic libc_Pread pread "libroot.so"
-//go:cgo_import_dynamic libc_Pwrite pwrite "libroot.so"
+//go:cgo_import_dynamic libc_pread pread "libroot.so"
+//go:cgo_import_dynamic libc_pwrite pwrite "libroot.so"
 //go:cgo_import_dynamic libc_Read read "libroot.so"
 //go:cgo_import_dynamic libc_Readdir_r readdir_r "libroot.so"
 //go:cgo_import_dynamic libc_Readlink readlink "libroot.so"
@@ -135,8 +135,8 @@ import "unsafe"
 //go:linkname libc_Open libc_Open
 //go:linkname libc_Openat libc_Openat
 //go:linkname libc_Pathconf libc_Pathconf
-//go:linkname libc_Pread libc_Pread
-//go:linkname libc_Pwrite libc_Pwrite
+//go:linkname libc_pread libc_pread
+//go:linkname libc_pwrite libc_pwrite
 //go:linkname libc_Read libc_Read
 //go:linkname libc_Readdir_r libc_Readdir_r
 //go:linkname libc_Readlink libc_Readlink
@@ -224,8 +224,8 @@ var (
 	libc_Open,
 	libc_Openat,
 	libc_Pathconf,
-	libc_Pread,
-	libc_Pwrite,
+	libc_pread,
+	libc_pwrite,
 	libc_Read,
 	libc_Readdir_r,
 	libc_Readlink,
@@ -679,12 +679,12 @@ func Pathconf(path string, name int) (val int, err error) {
 	return
 }
 
-func Pread(fd int, p []byte, offset int64) (n int, err error) {
+func pread(fd int, p []byte, offset int64) (n int, err error) {
 	var _p0 *byte
 	if len(p) > 0 {
 		_p0 = &p[0]
 	}
-	r0, _, e1 := sysvicall6(uintptr(unsafe.Pointer(&libc_Pread)), 4, uintptr(fd), uintptr(unsafe.Pointer(_p0)), uintptr(len(p)), uintptr(offset), 0, 0)
+	r0, _, e1 := sysvicall6(uintptr(unsafe.Pointer(&libc_pread)), 4, uintptr(fd), uintptr(unsafe.Pointer(_p0)), uintptr(len(p)), uintptr(offset), 0, 0)
 	n = int(r0)
 	if e1 != 0 {
 		err = errnoErr(e1)
@@ -692,12 +692,12 @@ func Pread(fd int, p []byte, offset int64) (n int, err error) {
 	return
 }
 
-func Pwrite(fd int, p []byte, offset int64) (n int, err error) {
+func pwrite(fd int, p []byte, offset int64) (n int, err error) {
 	var _p0 *byte
 	if len(p) > 0 {
 		_p0 = &p[0]
 	}
-	r0, _, e1 := sysvicall6(uintptr(unsafe.Pointer(&libc_Pwrite)), 4, uintptr(fd), uintptr(unsafe.Pointer(_p0)), uintptr(len(p)), uintptr(offset), 0, 0)
+	r0, _, e1 := sysvicall6(uintptr(unsafe.Pointer(&libc_pwrite)), 4, uintptr(fd), uintptr(unsafe.Pointer(_p0)), uintptr(len(p)), uintptr(offset), 0, 0)
 	n = int(r0)
 	if e1 != 0 {
 		err = errnoErr(e1)
@@ -838,7 +838,7 @@ func Setreuid(ruid int, euid int) (err error) {
 	return
 }
 
-func Setrlimit(which int, lim *Rlimit) (err error) {
+func setrlimit(which int, lim *Rlimit) (err error) {
 	_, _, e1 := rawSysvicall6(uintptr(unsafe.Pointer(&libc_Setrlimit)), 2, uintptr(which), uintptr(unsafe.Pointer(lim)), 0, 0, 0, 0)
 	if e1 != 0 {
 		err = errnoErr(e1)

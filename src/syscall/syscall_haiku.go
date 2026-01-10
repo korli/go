@@ -14,6 +14,9 @@ package syscall
 
 import "unsafe"
 
+func Syscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno)
+func RawSyscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno)
+
 // Implemented in asm_haiku_amd64.s.
 func rawSysvicall6(trap, nargs, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno)
 func sysvicall6(trap, nargs, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno)
@@ -454,8 +457,8 @@ func sendmsgN(fd int, p, oob []byte, ptr unsafe.Pointer, salen _Socklen, flags i
 //sys	Open(path string, mode int, perm uint32) (fd int, err error)
 //sys	Openat(fd int, path string, flags int, perm uint32) (fdret int, err error)
 //sys	Pathconf(path string, name int) (val int, err error)
-//sys	Pread(fd int, p []byte, offset int64) (n int, err error)
-//sys	Pwrite(fd int, p []byte, offset int64) (n int, err error)
+//sys	pread(fd int, p []byte, offset int64) (n int, err error)
+//sys	pwrite(fd int, p []byte, offset int64) (n int, err error)
 //sys	read(fd int, p []byte) (n int, err error)
 //sys	Readdir_r(dir uintptr, entry *Dirent, result **Dirent) (res Errno)
 //sys	Readlink(path string, buf []byte) (n int, err error)
@@ -469,7 +472,7 @@ func sendmsgN(fd int, p, oob []byte, ptr unsafe.Pointer, salen _Socklen, flags i
 //sys	Setpriority(which int, who int, prio int) (err error)
 //sysnb	Setregid(rgid int, egid int) (err error)
 //sysnb	Setreuid(ruid int, euid int) (err error)
-//sysnb	Setrlimit(which int, lim *Rlimit) (err error)
+//sysnb	setrlimit(which int, lim *Rlimit) (err error)
 //sysnb	Setsid() (pid int, err error)
 //sysnb	Setuid(uid int) (err error)
 //sys	Shutdown(s int, how int) (err error) = libnetwork.shutdown
@@ -514,6 +517,20 @@ func writelen(fd int, buf *byte, nbuf int) (n int, err error) {
 		err = e1
 	}
 	return
+}
+
+var mapper = &mmapper{
+	active: make(map[*byte][]byte),
+	mmap:   mmap,
+	munmap: munmap,
+}
+
+func Mmap(fd int, offset int64, length int, prot int, flags int) (data []byte, err error) {
+	return mapper.Mmap(fd, offset, length, prot, flags)
+}
+
+func Munmap(b []byte) (err error) {
+	return mapper.Munmap(b)
 }
 
 func Getdirentries(fd int, buf []byte, basep *uintptr) (n int, err error) {

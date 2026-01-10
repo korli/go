@@ -10,7 +10,6 @@ const (
 	_ENOMEM    = -0x80000000
 	_ETIMEDOUT = -0x7ffffff7
 	_EACCES    = -0x7ffffffe
-	_ENOSYS    = -0x7fff8ff7
 
 	_PROT_NONE  = 0x0
 	_PROT_READ  = 0x1

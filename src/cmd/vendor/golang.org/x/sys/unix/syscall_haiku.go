@@ -522,8 +522,8 @@ func Poll(fds []PollFd, timeout int) (n int, err error) {
 //sys	Open(path string, mode int, perm uint32) (fd int, err error)
 //sys	Openat(fd int, path string, flags int, perm uint32) (fdret int, err error)
 //sys	Pathconf(path string, name int) (val int, err error)
-//sys	Pread(fd int, p []byte, offset int64) (n int, err error)
-//sys	Pwrite(fd int, p []byte, offset int64) (n int, err error)
+//sys	pread(fd int, p []byte, offset int64) (n int, err error)
+//sys	pwrite(fd int, p []byte, offset int64) (n int, err error)
 //sys	read(fd int, p []byte) (n int, err error)
 //sys	Readdir_r(dir uintptr, entry *Dirent, result **Dirent) (res Errno)
 //sys	Readlink(path string, buf []byte) (n int, err error)
@@ -585,6 +585,20 @@ func writelen(fd int, buf *byte, nbuf int) (n int, err error) {
 		err = e1
 	}
 	return
+}
+
+var mapper = &mmapper{
+	active: make(map[*byte][]byte),
+	mmap:   mmap,
+	munmap: munmap,
+}
+
+func Mmap(fd int, offset int64, length int, prot int, flags int) (data []byte, err error) {
+	return mapper.Mmap(fd, offset, length, prot, flags)
+}
+
+func Munmap(b []byte) (err error) {
+	return mapper.Munmap(b)
 }
 
 func Getdirentries(fd int, buf []byte, basep *uintptr) (n int, err error) {

@@ -88,6 +88,10 @@ const (
 
 	_MAXHOSTNAMELEN = 0x100
 
+	_O_CREAT    = 0x200
+	_O_WRONLY   = 0x1
+	_O_TRUNC    = 0x400
+
 	_B_PAGE_SIZE = 0x1000
 
 	_B_ERROR = -0x1

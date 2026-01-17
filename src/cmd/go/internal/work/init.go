@@ -205,7 +205,7 @@ func buildModeInit() {
 					codegenArg = "-shared"
 				}
 
-			case "dragonfly", "freebsd", "illumos", "linux", "netbsd", "openbsd", "solaris":
+			case "dragonfly", "freebsd", "haiku", "illumos", "linux", "netbsd", "openbsd", "solaris":
 				// Use -shared so that the result is
 				// suitable for inclusion in a PIE or
 				// shared library.

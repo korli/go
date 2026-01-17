@@ -61,6 +61,7 @@ func Init() (*sys.Arch, ld.Arch) {
 
 		// not relevant for s390x
 		Freebsddynld:   "XXX",
+		Haikudynld:     "XXX",
 		Openbsddynld:   "XXX",
 		Netbsddynld:    "XXX",
 		Dragonflydynld: "XXX",

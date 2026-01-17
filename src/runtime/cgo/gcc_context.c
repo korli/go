@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // +build cgo
-// +build aix darwin dragonfly freebsd linux netbsd openbsd solaris windows
+// +build aix darwin dragonfly freebsd haiku linux netbsd openbsd solaris windows
 
 #include "libcgo.h"
 

@@ -616,7 +616,7 @@ const (
 // value of the GODEBUG environment variable.
 func cpuinit(env string) {
 	switch GOOS {
-	case "aix", "darwin", "ios", "dragonfly", "freebsd", "netbsd", "openbsd", "illumos", "solaris", "linux":
+	case "aix", "darwin", "ios", "dragonfly", "freebsd", "haiku", "netbsd", "openbsd", "illumos", "solaris", "linux":
 		cpu.DebugOptions = true
 	}
 	cpu.Initialize(env)
@@ -854,7 +854,7 @@ func mcommoninit(mp *m, id int64) {
 	unlock(&sched.lock)
 
 	// Allocate memory to hold a cgo traceback if the cgo call crashes.
-	if iscgo || GOOS == "solaris" || GOOS == "illumos" || GOOS == "windows" {
+	if iscgo || GOOS == "haiku" || GOOS == "solaris" || GOOS == "illumos" || GOOS == "windows" {
 		mp.cgoCallers = new(cgoCallers)
 	}
 }
@@ -1393,7 +1393,7 @@ func startTheWorldWithSema(emitTraceEvent bool) int64 {
 // via libcall.
 func usesLibcall() bool {
 	switch GOOS {
-	case "aix", "darwin", "illumos", "ios", "solaris", "windows":
+	case "aix", "darwin", "haiku", "illumos", "ios", "solaris", "windows":
 		return true
 	case "openbsd":
 		return GOARCH == "386" || GOARCH == "amd64" || GOARCH == "arm" || GOARCH == "arm64"
@@ -1405,7 +1405,7 @@ func usesLibcall() bool {
 // system-allocated stack.
 func mStackIsSystemAllocated() bool {
 	switch GOOS {
-	case "aix", "darwin", "plan9", "illumos", "ios", "solaris", "windows":
+	case "aix", "darwin", "haiku", "plan9", "illumos", "ios", "solaris", "windows":
 		return true
 	case "openbsd":
 		switch GOARCH {

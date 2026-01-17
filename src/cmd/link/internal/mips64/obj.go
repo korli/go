@@ -64,6 +64,7 @@ func Init() (*sys.Arch, ld.Arch) {
 		Linuxdynld:     "/lib64/ld64.so.1",
 		LinuxdynldMusl: musl,
 		Freebsddynld:   "XXX",
+		Haikudynld:     "XXX",
 		Openbsddynld:   "/usr/libexec/ld.so",
 		Netbsddynld:    "XXX",
 		Dragonflydynld: "XXX",

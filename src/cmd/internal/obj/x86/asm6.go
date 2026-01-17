@@ -2477,6 +2477,7 @@ func instinit(ctxt *obj.Link) {
 }
 
 var isAndroid = buildcfg.GOOS == "android"
+var isHaiku = buildcfg.GOOS == "haiku"
 
 func prefixof(ctxt *obj.Link, a *obj.Addr) int {
 	if a.Reg < REG_CS && a.Index < REG_CS { // fast path
@@ -2517,6 +2518,7 @@ func prefixof(ctxt *obj.Link, a *obj.Addr) int {
 				case objabi.Hdarwin,
 					objabi.Hdragonfly,
 					objabi.Hfreebsd,
+					objabi.Hhaiku,
 					objabi.Hnetbsd,
 					objabi.Hopenbsd:
 					return 0x65 // GS
@@ -2540,6 +2542,7 @@ func prefixof(ctxt *obj.Link, a *obj.Addr) int {
 
 			case objabi.Hdragonfly,
 				objabi.Hfreebsd,
+				objabi.Hhaiku,
 				objabi.Hnetbsd,
 				objabi.Hopenbsd,
 				objabi.Hsolaris:
@@ -3724,7 +3727,7 @@ func (ab *AsmBuf) asmandsz(ctxt *obj.Link, cursym *obj.LSym, p *obj.Prog, a *obj
 	}
 
 	if REG_AX <= base && base <= REG_R15 {
-		if a.Index == REG_TLS && !ctxt.Flag_shared && !isAndroid &&
+		if a.Index == REG_TLS && !ctxt.Flag_shared && !isAndroid && !isHaiku &&
 			!(ctxt.Headtype == objabi.Hwindows && ctxt.Arch.Family == sys.AMD64) {
 			rel = obj.Reloc{}
 			rel.Type = objabi.R_TLS_LE
@@ -5180,6 +5183,20 @@ func (ab *AsmBuf) doasm(ctxt *obj.Link, cursym *obj.LSym, p *obj.Prog) {
 						r.Siz = 4
 						r.Add = -4
 						ab.PutInt32(0)
+
+					case objabi.Hhaiku:
+						pp.From = p.From
+						pp.From.Type = obj.TYPE_MEM
+						pp.From.Name = obj.NAME_NONE
+						pp.From.Reg = REG_NONE
+						pp.From.Offset = 0
+						pp.From.Index = REG_NONE
+						pp.From.Scale = 0
+						ab.rexflag |= Pw
+						ab.Put2(0x64, // FS
+							0x8B)
+						ab.asmand(ctxt, cursym, p, &pp.From, &p.To)
+
 
 					case objabi.Hplan9:
 						pp.From = obj.Addr{}

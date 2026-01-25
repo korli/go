@@ -71,6 +71,7 @@ func Init() (*sys.Arch, ld.Arch) {
 			LinuxdynldMusl: musl,
 
 			Freebsddynld:   "XXX",
+			Haikudynld:     "XXX",
 			Openbsddynld:   "XXX",
 			Netbsddynld:    "XXX",
 			Dragonflydynld: "XXX",

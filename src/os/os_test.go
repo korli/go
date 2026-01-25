@@ -116,6 +116,15 @@ var sysdir = func() *sysDir {
 				"CONTRIBUTING.md",
 			},
 		}
+	case "haiku":
+		return &sysDir{
+			"/system/settings/network",
+			[]string{
+				"hosts",
+				"resolv.conf",
+				"services",
+			},
+		}
 	}
 	return &sysDir{
 		"/etc",
@@ -643,6 +652,8 @@ func TestReaddirnamesOneAtATime(t *testing.T) {
 		dir = "/bin"
 	case "windows":
 		dir = Getenv("SystemRoot") + "\\system32"
+	case "haiku":
+		dir = "/system/bin"
 	}
 	file, err := Open(dir)
 	if err != nil {
@@ -1546,6 +1557,8 @@ func testChtimes(t *testing.T, name string) {
 	pmt := postStat.ModTime()
 	if !pat.Before(at) {
 		switch runtime.GOOS {
+		case "haiku":
+			// Atime is set whenever stat changes.
 		case "plan9":
 			// Mtime is the time of the last change of
 			// content.  Similarly, atime is set whenever
@@ -1648,6 +1661,8 @@ func TestChdirAndGetwd(t *testing.T) {
 			}
 			dirs = append(dirs, dir)
 		}
+	case "haiku":
+		dirs = []string{"/boot/system/bin"}
 	}
 	oldwd := Getenv("PWD")
 	for mode := 0; mode < 2; mode++ {

@@ -246,6 +246,10 @@ needtls:
 	// skip TLS setup on Darwin
 	JMP ok
 #endif
+#ifdef GOOS_haiku
+	// skip TLS setup on Haiku
+	JMP ok
+#endif
 #ifdef GOOS_openbsd
 	// skip TLS setup on OpenBSD
 	JMP ok

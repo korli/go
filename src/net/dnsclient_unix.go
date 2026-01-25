@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"internal/godebug"
+	"internal/goos"
 	"internal/itoa"
 	"io"
 	"os"
@@ -357,7 +358,11 @@ type resolverConfig struct {
 var resolvConf resolverConfig
 
 func getSystemDNSConfig() *dnsConfig {
-	resolvConf.tryUpdate("/etc/resolv.conf")
+	if goos.GOOS == "haiku" {
+		resolvConf.tryUpdate("/boot/system/settings/network/resolv.conf")
+	} else {
+		resolvConf.tryUpdate("/etc/resolv.conf")
+	}	
 	return resolvConf.dnsConfig.Load()
 }
 
@@ -365,7 +370,11 @@ func getSystemDNSConfig() *dnsConfig {
 func (conf *resolverConfig) init() {
 	// Set dnsConfig and lastChecked so we don't parse
 	// resolv.conf twice the first time.
-	conf.dnsConfig.Store(dnsReadConfig("/etc/resolv.conf"))
+	if goos.GOOS == "haiku" {
+		conf.dnsConfig.Store(dnsReadConfig("/boot/system/settings/network/resolv.conf"))
+	} else {
+		conf.dnsConfig.Store(dnsReadConfig("/etc/resolv.conf"))
+	}
 	conf.lastChecked = time.Now()
 
 	// Prepare ch so that only one update of resolverConfig may

@@ -201,6 +201,7 @@ type ELFArch struct {
 	Linuxdynld     string
 	LinuxdynldMusl string
 	Freebsddynld   string
+	Haikudynld     string
 	Netbsddynld    string
 	Openbsddynld   string
 	Dragonflydynld string
@@ -1449,7 +1450,7 @@ func (ctxt *Link) doelf() {
 		shstrtabAddstring(".note.tag")
 	}
 	if ctxt.IsHaiku() {
-		shstrtab.Addstring(".comment")
+		shstrtabAddstring(".comment")
 	}
 	if len(buildinfo) > 0 {
 		shstrtabAddstring(".note.gnu.build-id")
@@ -1928,7 +1929,7 @@ func asmbElf(ctxt *Link) {
 				interpreter = thearch.ELF.Freebsddynld
 
 			case objabi.Hhaiku:
-				interpreter = thearch.Haikudynld
+				interpreter = thearch.ELF.Haikudynld
 
 			case objabi.Hnetbsd:
 				interpreter = thearch.ELF.Netbsddynld

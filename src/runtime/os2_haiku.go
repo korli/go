@@ -11,7 +11,6 @@ import (
 )
 
 // Remove
-//libc_kill,
 //libc_madvise,
 
 //go:cgo_export_dynamic runtime.end _end

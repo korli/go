@@ -352,8 +352,7 @@ func anyToSockaddr(fd int, rsa *RawSockaddrAny) (Sockaddr, error) {
 		for n < len(pp.Path) && pp.Path[n] != 0 {
 			n++
 		}
-		bytes := (*[10000]byte)(unsafe.Pointer(&pp.Path[0]))[0:n]
-		sa.Name = string(bytes)
+		sa.Name = string(unsafe.Slice((*byte)(unsafe.Pointer(&pp.Path[0])), n))
 		return sa, nil
 
 	case AF_INET:
@@ -463,9 +462,15 @@ func sendmsgN(fd int, iov []Iovec, oob []byte, ptr unsafe.Pointer, salen _Sockle
  */
 
 //sys	ioctlRet(fd int, req uint, arg uintptr) (ret int, err error) = libroot.ioctl
+//sys	ioctlPtrRet(fd int, req uint, arg unsafe.Pointer) (ret int, err error) = libroot.ioctl
 
 func ioctl(fd int, req uint, arg uintptr) (err error) {
 	_, err = ioctlRet(fd, req, arg)
+	return err
+}
+
+func ioctlPtr(fd int, req uint, arg unsafe.Pointer) (err error) {
+	_, err = ioctlPtrRet(fd, req, arg)
 	return err
 }
 

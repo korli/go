@@ -167,6 +167,7 @@ func osinit() {
 func tstart_sysvicall(newm *m) uint32
 
 // May run with m.p==nil, so write barriers are not allowed.
+//
 //go:nowritebarrier
 func newosproc(mp *m) {
 	var (
@@ -187,7 +188,9 @@ func newosproc(mp *m) {
 	// Disable signals during create, so that the new thread starts
 	// with signals disabled. It will enable them in minit.
 	sigprocmask(_SIG_SETMASK, &sigset_all, &oset)
-	ret = pthread_create(&tid, &attr, abi.FuncPCABI0(tstart_sysvicall), unsafe.Pointer(mp))
+	ret = retryOnEAGAIN(func() int32 {
+		return pthread_create(&tid, &attr, abi.FuncPCABI0(tstart_sysvicall), unsafe.Pointer(mp))
+	})
 	sigprocmask(_SIG_SETMASK, &oset, nil)
 	if ret != 0 {
 		print("runtime: failed to create new OS thread (have ", mcount(), " already; errno=", ret, ")\n")
@@ -198,6 +201,11 @@ func newosproc(mp *m) {
 	}
 }
 
+func exitThread(wait *atomic.Uint32) {
+	// We should never reach exitThread on Haiku because we let
+	// libroot clean up threads.
+	throw("exitThread")
+}
 
 var urandom_dev = []byte("/dev/random\x00")
 
@@ -221,26 +229,6 @@ func mpreinit(mp *m) {
 }
 
 func miniterrno()
-
-//go:nosplit
-func setSignalstackSP(s *stackt, sp uintptr) {
-	*(*uintptr)(unsafe.Pointer(&s.ss_sp)) = sp
-}
-
-//go:nosplit
-//go:nowritebarrierrec
-func sigaddset(mask *sigset, i int) {
-	*mask |= 1 << (sigset(i) - 1)
-}
-
-func sigdelset(mask *sigset, i int) {
-	*mask &^= 1 << (sigset(i) - 1)
-}
-
-//go:nosplit
-func (c *sigctxt) fixsigcode(sig uint32) {
-}
-
 
 // Called to initialize a new m (including the bootstrap m).
 // Called on the new thread, cannot allocate memory.
@@ -298,6 +286,27 @@ func getsig(i uint32) uintptr {
 	return *((*uintptr)(unsafe.Pointer(&sa._funcptr)))
 }
 
+// setSignalstackSP sets the ss_sp field of a stackt.
+//
+//go:nosplit
+func setSignalstackSP(s *stackt, sp uintptr) {
+	*(*uintptr)(unsafe.Pointer(&s.ss_sp)) = sp
+}
+
+//go:nosplit
+//go:nowritebarrierrec
+func sigaddset(mask *sigset, i int) {
+	*mask |= 1 << (sigset(i) - 1)
+}
+
+func sigdelset(mask *sigset, i int) {
+	*mask &^= 1 << (sigset(i) - 1)
+}
+
+//go:nosplit
+func (c *sigctxt) fixsigcode(sig uint32) {
+}
+
 func setProcessCPUProfiler(hz int32) {
 	setProcessCPUProfilerTimer(hz)
 }
@@ -318,18 +327,17 @@ func semacreate(mp *m) {
 	}
 
 	var sem *semt
-	_g_ := getg()
 
 	// Call libc's malloc rather than malloc. This will
 	// allocate space on the C heap. We can't call malloc
 	// here because it could cause a deadlock.
-	_g_.m.libcall.fn = uintptr(unsafe.Pointer(&libc_malloc))
-	_g_.m.libcall.n = 1
-	_g_.m.scratch = mscratch{}
-	_g_.m.scratch.v[0] = unsafe.Sizeof(*sem)
-	_g_.m.libcall.args = uintptr(unsafe.Pointer(&_g_.m.scratch))
-	asmcgocall(unsafe.Pointer(&asmsysvicall6x), unsafe.Pointer(&_g_.m.libcall))
-	sem = (*semt)(unsafe.Pointer(_g_.m.libcall.r1))
+	mp.libcall.fn = uintptr(unsafe.Pointer(&libc_malloc))
+	mp.libcall.n = 1
+	mp.scratch = mscratch{}
+	mp.scratch.v[0] = unsafe.Sizeof(*sem)
+	mp.libcall.args = uintptr(unsafe.Pointer(&mp.scratch))
+	asmcgocall(unsafe.Pointer(&asmsysvicall6x), unsafe.Pointer(&mp.libcall))
+	sem = (*semt)(unsafe.Pointer(mp.libcall.r1))
 	if sem_init(sem, 0, 0) != 0 {
 		throw("sem_init")
 	}
@@ -372,12 +380,6 @@ func semasleep(ns int64) int32 {
 		throw("sem_wait")
 	}
 	return 0
-}
-
-func exitThread(wait *atomic.Uint32) {
-	// We should never reach exitThread on Haiku because we let
-	// libroot clean up threads.
-	throw("exitThread")
 }
 
 //go:nosplit
@@ -443,11 +445,6 @@ func nanotime1() int64 {
 func fcntl(fd, cmd, arg int32) (ret int32, errno int32) {
 	r1, err := sysvicall3Err(&libc_fcntl, uintptr(fd), uintptr(cmd), uintptr(arg))
 	return int32(r1), int32(err)
-}
-
-//go:nosplit
-func closeonexec(fd int32) {
-	fcntl(fd, _F_SETFD, _FD_CLOEXEC)
 }
 
 //go:nosplit
@@ -610,6 +607,11 @@ func pipe2(flags int32) (r, w int32, errno int32) {
 	return p[0], p[1], int32(e)
 }
 
+//go:nosplit
+func closeonexec(fd int32) {
+	fcntl(fd, _F_SETFD, _FD_CLOEXEC)
+}
+
 func osyield1()
 
 //go:nosplit
@@ -619,15 +621,7 @@ func osyield_no_g() {
 
 //go:nosplit
 func osyield() {
-	_g_ := getg()
-
-	// Check the validity of m because we might be called in cgo callback
-	// path early enough where there isn't a m available yet.
-	if _g_ != nil && _g_.m != nil {
-		sysvicall0(&libc_sched_yield)
-		return
-	}
-	osyield1()
+	sysvicall0(&libc_sched_yield)
 }
 
 func area_for(addr uintptr) {

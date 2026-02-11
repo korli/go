@@ -1802,7 +1802,7 @@ var opindex [(ALAST + 1) & obj.AMask]*Optab
 // around a Solaris-specific bug that should be fixed differently, but we don't know
 // what that bug is. And this does fix it.
 func useAbs(ctxt *obj.Link, s *obj.LSym) bool {
-	if ctxt.Headtype == objabi.Hsolaris {
+	if ctxt.Headtype == objabi.Hhaiku || ctxt.Headtype == objabi.Hsolaris {
 		// All the Solaris dynamic imports from libc.so begin with "libc_".
 		return strings.HasPrefix(s.Name, "libc_")
 	}

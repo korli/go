@@ -51,9 +51,9 @@ TEXT runtime·pipe1(SB),NOSPLIT,$0
 //
 // Called by runtime·asmcgocall or runtime·cgocall.
 // NOT USING GO CALLING CONVENTION.
-TEXT runtime·asmsysvicall6(SB),NOSPLIT,$0
+TEXT runtime·asmsysvicall6(SB),NOSPLIT,$16
 	// asmcgocall will put first argument into DI.
-	PUSHQ	DI			// save for later
+	MOVQ	DI, (SP)
 	MOVQ	libcall_fn(DI), AX
 	MOVQ	libcall_args(DI), R11
 	MOVQ	libcall_n(DI), R10
@@ -84,7 +84,7 @@ skipargs:
 	CALL	AX
 
 	// Return result
-	POPQ	DI
+	MOVQ	(SP), DI
 	MOVQ	AX, libcall_r1(DI)
 	MOVQ	DX, libcall_r2(DI)
 

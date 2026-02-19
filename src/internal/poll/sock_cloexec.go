@@ -5,7 +5,7 @@
 // This file implements accept for platforms that provide a fast path for
 // setting SetNonblock and CloseOnExec.
 
-//go:build dragonfly || freebsd || (linux && !arm) || netbsd || openbsd || solaris
+//go:build dragonfly || freebsd || haiku || (linux && !arm) || netbsd || openbsd || solaris
 
 package poll
 

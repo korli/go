@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build dragonfly || freebsd || netbsd || openbsd || solaris
+//go:build dragonfly || freebsd || haiku || netbsd || openbsd || solaris
 
 package runtime
 
@@ -24,9 +24,9 @@ func sysAllocOS(n uintptr) unsafe.Pointer {
 
 func sysUnusedOS(v unsafe.Pointer, n uintptr) {
 	if debug.madvdontneed != 0 {
-		madvise(v, n, _MADV_DONTNEED)
+		//madvise(v, n, _MADV_DONTNEED)
 	} else {
-		madvise(v, n, _MADV_FREE)
+		//madvise(v, n, _MADV_FREE)
 	}
 }
 
@@ -56,6 +56,7 @@ func sysFaultOS(v unsafe.Pointer, n uintptr) {
 
 // Indicates not to reserve swap space for the mapping.
 const _sunosMAP_NORESERVE = 0x40
+const _haikuMAP_NORESERVE = 0x10
 
 func sysReserveOS(v unsafe.Pointer, n uintptr) unsafe.Pointer {
 	flags := int32(_MAP_ANON | _MAP_PRIVATE)
@@ -65,6 +66,12 @@ func sysReserveOS(v unsafe.Pointer, n uintptr) unsafe.Pointer {
 		// wherein large mappings can cause fork to fail.
 		flags |= _sunosMAP_NORESERVE
 	}
+	if GOOS == "haiku" {
+		// Be explicit that we don't want to reserve swap space
+		// for PROT_NONE anonymous mappings. This avoids an issue
+		// wherein large mappings can cause fork to fail.
+		flags |= _haikuMAP_NORESERVE
+	}
 	p, err := mmap(v, n, _PROT_NONE, flags, -1, 0)
 	if err != 0 {
 		return nil
@@ -73,7 +80,7 @@ func sysReserveOS(v unsafe.Pointer, n uintptr) unsafe.Pointer {
 }
 
 const _sunosEAGAIN = 11
-const _ENOMEM = 12
+// const _ENOMEM = 12
 
 func sysMapOS(v unsafe.Pointer, n uintptr) {
 	p, err := mmap(v, n, _PROT_READ|_PROT_WRITE, _MAP_ANON|_MAP_FIXED|_MAP_PRIVATE, -1, 0)

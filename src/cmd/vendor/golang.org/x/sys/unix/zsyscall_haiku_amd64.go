@@ -30,6 +30,7 @@ import (
 //go:cgo_import_dynamic libc_Closedir closedir "libroot.so"
 //go:cgo_import_dynamic libc_Dup dup "libroot.so"
 //go:cgo_import_dynamic libc_Dup2 dup2 "libroot.so"
+//go:cgo_import_dynamic libc_Faccessat faccessat "libroot.so"
 //go:cgo_import_dynamic libc_Fchdir fchdir "libroot.so"
 //go:cgo_import_dynamic libc_Fchmod fchmod "libroot.so"
 //go:cgo_import_dynamic libc_Fchmodat fchmodat "libroot.so"

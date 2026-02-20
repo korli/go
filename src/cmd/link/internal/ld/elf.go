@@ -201,6 +201,7 @@ type ELFArch struct {
 	Linuxdynld     string
 	LinuxdynldMusl string
 	Freebsddynld   string
+	Haikudynld     string
 	Netbsddynld    string
 	Openbsddynld   string
 	Dragonflydynld string
@@ -629,6 +630,26 @@ func elfWriteMipsAbiFlags(ctxt *Link) int {
 	ctxt.Out.Write32(0) // ases
 	ctxt.Out.Write32(0) // flags1
 	ctxt.Out.Write32(0) // flags2
+	return int(sh.Size)
+}
+
+
+var ELF_COMMENT_HAIKU = "GCC: (GNU) 11.2.0"
+
+func elfhaikucomment(sh *ElfShdr, startva uint64, resoff uint64) int {
+	n := len(ELF_COMMENT_HAIKU) + 1
+	sh.Addr = startva + resoff - uint64(n)
+	sh.Off = resoff - uint64(n)
+	sh.Size = uint64(n)
+
+	return n
+}
+
+func elfwritehaikucomment(out *OutBuf) int {
+	sh := elfshname(".comment")
+	out.SeekSet(int64(sh.Off))
+	out.WriteString(ELF_COMMENT_HAIKU)
+	out.Write8(0)
 	return int(sh.Size)
 }
 
@@ -1442,9 +1463,11 @@ func (ctxt *Link) doelf() {
 	// generate .tbss section for dynamic internal linker or external
 	// linking, so that various binutils could correctly calculate
 	// PT_TLS size. See https://golang.org/issue/5200.
-	if !*FlagD || ctxt.IsExternal() {
-		shstrtabAddstring(".tbss")
-	}
+	// if ctxt.HeadType != objabi.Hhaiku {
+		if !*FlagD || ctxt.IsExternal() {
+			shstrtabAddstring(".tbss")
+		}
+	// }
 	if ctxt.IsNetbsd() {
 		shstrtabAddstring(".note.netbsd.ident")
 		if *flagRace {
@@ -1456,6 +1479,9 @@ func (ctxt *Link) doelf() {
 	}
 	if ctxt.IsFreebsd() {
 		shstrtabAddstring(".note.tag")
+	}
+	if ctxt.IsHaiku() {
+		shstrtabAddstring(".comment")
 	}
 	if len(buildinfo) > 0 {
 		shstrtabAddstring(".note.gnu.build-id")
@@ -1950,6 +1976,9 @@ func asmbElf(ctxt *Link) {
 			case objabi.Hfreebsd:
 				interpreter = thearch.ELF.Freebsddynld
 
+			case objabi.Hhaiku:
+				interpreter = thearch.ELF.Haikudynld
+
 			case objabi.Hnetbsd:
 				interpreter = thearch.ELF.Netbsddynld
 
@@ -1992,6 +2021,22 @@ func asmbElf(ctxt *Link) {
 		pnotei.Type = elf.PT_NOTE
 		pnotei.Flags = elf.PF_R
 		phsh(pnotei, sh)
+	}
+
+	if ctxt.HeadType == objabi.Hhaiku {
+		sh := elfshname(".comment")
+
+		sh.Type = uint32(elf.SHT_PROGBITS)
+		sh.Flags = uint64(elf.SHF_MERGE | elf.SHF_STRINGS)
+		sh.Addralign = 1
+		sh.Entsize = 1
+
+		resoff -= int64(elfhaikucomment(sh, uint64(startva), uint64(resoff)))
+
+		ph := newElfPhdr()
+		ph.Type = elf.PT_NOTE
+		ph.Flags = 0
+		phsh(ph, sh)
 	}
 
 	if len(buildinfo) > 0 {
@@ -2173,18 +2218,20 @@ func asmbElf(ctxt *Link) {
 		/*
 		 * Thread-local storage segment (really just size).
 		 */
-		tlssize := uint64(0)
-		for _, sect := range Segdata.Sections {
-			if sect.Name == ".tbss" {
-				tlssize = sect.Length
+		if ctxt.HeadType != objabi.Hhaiku {
+			tlssize := uint64(0)
+			for _, sect := range Segdata.Sections {
+				if sect.Name == ".tbss" {
+					tlssize = sect.Length
+				}
 			}
-		}
-		if tlssize != 0 {
-			ph := newElfPhdr()
-			ph.Type = elf.PT_TLS
-			ph.Flags = elf.PF_R
-			ph.Memsz = tlssize
-			ph.Align = uint64(ctxt.Arch.RegSize)
+			if tlssize != 0 {
+				ph := newElfPhdr()
+				ph.Type = elf.PT_TLS
+				ph.Flags = elf.PF_R
+				ph.Memsz = tlssize
+				ph.Align = uint64(ctxt.Arch.RegSize)
+			}
 		}
 	}
 
@@ -2376,6 +2423,9 @@ elfobj:
 		if *flagBuildid != "" {
 			a += int64(elfwritegobuildid(ctxt.Out))
 		}
+	}
+	if ctxt.HeadType == objabi.Hhaiku {
+		a += int64(elfwritehaikucomment(ctxt.Out))
 	}
 	if *flagRace && ctxt.IsNetbsd() {
 		a += int64(elfwritenetbsdpax(ctxt.Out))

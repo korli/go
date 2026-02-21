@@ -141,7 +141,7 @@ const (
 var sigset_all = ^sigset(0)
 var sigset_none = sigset(0)
 
-func getncpu() int32 {
+func getCPUCount() int32 {
 	n := int32(sysconf(__SC_NPROCESSORS_ONLN))
 	if n < 1 {
 		return 1
@@ -162,7 +162,7 @@ func osinit() {
 	// before calling minit on m0.
 	asmcgocall(unsafe.Pointer(abi.FuncPCABI0(miniterrno)), unsafe.Pointer(&libc__errnop))
 
-	ncpu = getncpu()
+	numCPUStartup = getCPUCount()
 	if physPageSize == 0 {
 		physPageSize = getPageSize()
 	}

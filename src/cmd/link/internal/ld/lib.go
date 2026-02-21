@@ -837,7 +837,7 @@ func (ctxt *Link) linksetup() {
 	// Also leave it enabled on Solaris which doesn't support
 	// statically linked binaries.
 	if ctxt.BuildMode == BuildModeExe {
-		if havedynamic == 0 && ctxt.HeadType != objabi.Hdarwin && ctxt.HeadType != objabi.Hsolaris {
+		if havedynamic == 0 && ctxt.HeadType != objabi.Hdarwin && ctxt.HeadType != objabi.Hsolaris && ctxt.HeadType != objabi.Hhaiku {
 			*FlagD = true
 		}
 	}
@@ -1484,6 +1484,12 @@ func (ctxt *Link) hostlink() {
 		if *flagHostBuildid == "none" {
 			argv = append(argv, "-Wl,-no_uuid")
 		}
+	case objabi.Hhaiku:
+		//argv = append(argv, "-lbsd")
+		argv = append(argv, "-lnetwork")
+		argv = append(argv, "-lroot")
+		argv = append(argv, "-lgcc_s")
+		argv = append(argv, "-fPIC")
 	case objabi.Hopenbsd:
 		argv = append(argv, "-pthread")
 		if ctxt.BuildMode != BuildModePIE {
@@ -1750,7 +1756,7 @@ func (ctxt *Link) hostlink() {
 	// Force global symbols to be exported for dlopen, etc.
 	if ctxt.IsELF {
 		if ctxt.DynlinkingGo() || ctxt.BuildMode == BuildModeCShared || !linkerFlagSupported(ctxt.Arch, argv[0], altLinker, "-Wl,--export-dynamic-symbol=main") {
-			argv = append(argv, "-rdynamic")
+			//argv = append(argv, "-rdynamic")
 		} else {
 			var exports []string
 			ctxt.loader.ForAllCgoExportDynamic(func(s loader.Sym) {

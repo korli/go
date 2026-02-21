@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// aix, darwin, js/wasm, openbsd, solaris and wasip1/wasm don't implement
+// aix, darwin, haiku, js/wasm, openbsd, solaris and wasip1/wasm don't implement
 // waitid/wait6.
 
-//go:build aix || darwin || (js && wasm) || openbsd || solaris || wasip1
+//go:build aix || darwin || haiku || (js && wasm) || openbsd || solaris || wasip1
 
 package os
 

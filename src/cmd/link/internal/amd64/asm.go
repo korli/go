@@ -453,8 +453,8 @@ func elfreloc1(ctxt *ld.Link, out *ld.OutBuf, ldr *loader.Loader, s loader.Sym, 
 			if ldr.SymType(r.Xsym) == sym.SDYNIMPORT && ldr.SymElfType(r.Xsym) == elf.STT_FUNC {
 				out.Write64(uint64(elf.R_X86_64_PLT32) | uint64(elfsym)<<32)
 			} else {
-//				out.Write64(uint64(elf.R_X86_64_PC32) | uint64(elfsym)<<32)
-				out.Write64(uint64(elf.R_X86_64_GOTPCREL) | uint64(elfsym)<<32)
+				out.Write64(uint64(elf.R_X86_64_PC32) | uint64(elfsym)<<32)
+//				out.Write64(uint64(elf.R_X86_64_GOTPCREL) | uint64(elfsym)<<32)
 			}
 		} else {
 			return false

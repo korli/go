@@ -13,6 +13,8 @@ func syscall6(trap, nargs, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err 
 //go:cgo_import_dynamic libc_fstatat fstatat "libroot.so"
 //go:cgo_import_dynamic libc_openat openat "libroot.so"
 //go:cgo_import_dynamic libc_unlinkat unlinkat "libroot.so"
+//go:cgo_import_dynamic libc_readlinkat readlinkat "libroot.so"
+//go:cgo_import_dynamic libc_mkdirat mkdirat "libroot.so"
 
 const (
 	AT_EACCESS          = 0x8

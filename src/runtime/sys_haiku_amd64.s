@@ -167,7 +167,7 @@ allgood:
 
 	// save m->libcall 
 	MOVQ	g_m(R10), BP
-	LEAQ	m_libcall(BP), R11
+	LEAQ	(m_mOS+mOS_libcall)(BP), R11
 	MOVQ	libcall_fn(R11), R10
 	MOVQ	R10, 88(SP)
 	MOVQ	libcall_args(R11), R10
@@ -217,7 +217,7 @@ allgood:
 	MOVQ	g(BX), BP
 	MOVQ	g_m(BP), BP
 	// restore libcall
-	LEAQ	m_libcall(BP), R11
+	LEAQ	(m_mOS+mOS_libcall)(BP), R11
 	MOVQ	88(SP), R10
 	MOVQ	R10, libcall_fn(R11)
 	MOVQ	96(SP), R10

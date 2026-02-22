@@ -307,3 +307,4 @@ func MatchFile(name string, tags map[string]bool) bool {
 	}
 	return true
 }
+

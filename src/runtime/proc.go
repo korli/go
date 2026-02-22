@@ -794,7 +794,7 @@ func getGodebugEarly() (string, bool) {
 	const prefix = "GODEBUG="
 	var env string
 	switch GOOS {
-	case "aix", "darwin", "ios", "dragonfly", "freebsd", "netbsd", "openbsd", "illumos", "solaris", "linux":
+	case "aix", "darwin", "ios", "dragonfly", "freebsd", "haiku", "netbsd", "openbsd", "illumos", "solaris", "linux":
 		// Similar to goenv_unix but extracts the environment value for
 		// GODEBUG directly.
 		// TODO(moehrmann): remove when general goenvs() can be called before cpuinit()
@@ -1030,7 +1030,7 @@ func mcommoninit(mp *m, id int64) {
 	unlock(&sched.lock)
 
 	// Allocate memory to hold a cgo traceback if the cgo call crashes.
-	if iscgo || GOOS == "solaris" || GOOS == "illumos" || GOOS == "windows" {
+	if iscgo || GOOS == "haiku" || GOOS == "solaris" || GOOS == "illumos" || GOOS == "windows" {
 		mp.cgoCallers = new(cgoCallers)
 	}
 	mProfStackInit(mp)
@@ -1830,7 +1830,7 @@ func startTheWorldWithSema(now int64, w worldStop) int64 {
 // via libcall.
 func usesLibcall() bool {
 	switch GOOS {
-	case "aix", "darwin", "illumos", "ios", "openbsd", "solaris", "windows":
+	case "aix", "darwin", "haiku", "illumos", "ios", "openbsd", "solaris", "windows":
 		return true
 	}
 	return false
@@ -1840,7 +1840,7 @@ func usesLibcall() bool {
 // system-allocated stack.
 func mStackIsSystemAllocated() bool {
 	switch GOOS {
-	case "aix", "darwin", "plan9", "illumos", "ios", "openbsd", "solaris", "windows":
+	case "aix", "darwin", "haiku", "plan9", "illumos", "ios", "openbsd", "solaris", "windows":
 		return true
 	}
 	return false
@@ -1889,7 +1889,7 @@ func mstart0() {
 
 	// Exit this thread.
 	if mStackIsSystemAllocated() {
-		// Windows, Solaris, illumos, Darwin, AIX and Plan 9 always system-allocate
+		// Windows, Haiku, Solaris, illumos, Darwin, AIX and Plan 9 always system-allocate
 		// the stack, but put it in gp.stack before mstart,
 		// so the logic above hasn't set osStack yet.
 		osStack = true

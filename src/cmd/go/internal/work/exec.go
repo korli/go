@@ -990,7 +990,7 @@ func (b *Builder) build(ctx context.Context, a *Action) (err error) {
 	// This is read by readGccgoArchive in cmd/internal/buildid/buildid.go.
 	if a.buildID != "" && cfg.BuildToolchainName == "gccgo" {
 		switch cfg.Goos {
-		case "aix", "android", "dragonfly", "freebsd", "illumos", "linux", "netbsd", "openbsd", "solaris":
+		case "aix", "android", "dragonfly", "freebsd", "haiku", "illumos", "linux", "netbsd", "openbsd", "solaris":
 			asmfile, err := b.gccgoBuildIDFile(a)
 			if err != nil {
 				return err
@@ -2451,6 +2451,8 @@ func (b *Builder) compilerCmd(compiler []string, incdir, workdir string) []strin
 		switch cfg.Goos {
 		case "windows":
 			a = append(a, "-mthreads")
+		case "haiku":
+			break
 		default:
 			a = append(a, "-pthread")
 		}

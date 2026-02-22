@@ -290,7 +290,7 @@ func Exec(argv0 string, argv []string, envv []string) (err error) {
 
 	var err1 error
 	switch runtime.GOOS {
-	case "aix", "darwin", "illumos", "ios", "openbsd", "solaris":
+	case "aix", "darwin", "haiku", "illumos", "ios", "openbsd", "solaris":
 		// RawSyscall should never be used on these platforms.
 		err1 = execveLibc(argv0p, &argvp[0], &envvp[0])
 

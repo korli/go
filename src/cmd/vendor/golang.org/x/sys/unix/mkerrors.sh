@@ -149,6 +149,22 @@ includes_FreeBSD='
 #define SIOCSIFPHYADDR	_IOW(105, 70, struct oifaliasreq)	// ifaliasreq contains if_data
 #endif
 '
+includes_Haiku='
+#include <sys/types.h>
+#include <sys/file.h>
+#include <fcntl.h>
+#include <dirent.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/ip6.h>
+#include <netinet/tcp.h>
+#include <errno.h>
+#include <signal.h>
+#include <sys/resource.h>
+#include <sys/mman.h>
+#include <termios.h>
+'
 
 includes_Linux='
 #define _LARGEFILE_SOURCE
@@ -451,6 +467,25 @@ includes_SunOS='
 '
 
 
+
+if [ "$(uname)" = "Haiku" ]
+then
+includes='
+#include <sys/types.h>
+#include <sys/file.h>
+#include <fcntl.h>
+#include <dirent.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/ip6.h>
+#include <netinet/tcp.h>
+#include <errno.h>
+#include <signal.h>
+#include <sys/resource.h>
+#include <time.h>
+'
+else
 includes='
 #include <sys/types.h>
 #include <sys/file.h>
@@ -467,6 +502,7 @@ includes='
 #include <sys/resource.h>
 #include <time.h>
 '
+fi
 ccflags="$@"
 
 # Write go tool cgo -godefs input.
@@ -670,6 +706,16 @@ errors=$(
 	sort
 )
 
+if [ "$(uname)" = "Haiku" ]
+then
+# FIXME: haiku: 64-bit?
+signals=$(
+	echo '#include <signal.h>' | $CC -x c - -E -dM $ccflags |
+	awk '$1=="#define" && $2 ~ /^SIG[A-Z0-9]+$/ { print $2 }' |
+	grep -v 'SIGSTKSIZE\|SIGSTKSZ\|SIGRT' |
+	sort
+)
+else
 # Pull out the signal names for later.
 signals=$(
 	echo '#include <signal.h>' | $CC -x c - -E -dM $ccflags |
@@ -677,6 +723,7 @@ signals=$(
 	grep -E -v '(SIGSTKSIZE|SIGSTKSZ|SIGRT|SIGMAX64)' |
 	sort
 )
+fi
 
 # Again, writing regexps to a file.
 echo '#include <errno.h>' | $CC -x c - -E -dM $ccflags |
@@ -697,7 +744,11 @@ cat _error.out | grep -vf _error.grep | grep -vf _signal.grep
 echo
 echo '// Errors'
 echo 'const ('
+if [ "$(uname)" = "Haiku" ]; then
+cat _error.out | grep -f _error.grep | sed 's/=\(.*\)/= syscall.Errno(\1 \& 0xffffffff)/'
+else
 cat _error.out | grep -f _error.grep | sed 's/=\(.*\)/= syscall.Errno(\1)/'
+fi
 echo ')'
 
 echo
@@ -774,7 +825,7 @@ main(void)
 		// lowercase first letter: Bad -> bad, but STREAM -> STREAM.
 		if(A <= buf[0] && buf[0] <= Z && a <= buf[1] && buf[1] <= z)
 			buf[0] += a - A;
-		printf("\t{ %d, \"%s\", \"%s\" },\n", e, errors[i].name, buf);
+		printf("\t{ 0x%x, \"%s\", \"%s\" },\n", e, errors[i].name, buf);
 	}
 	printf("}\n\n");
 

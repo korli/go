@@ -15,7 +15,7 @@ import (
 
 func MustHaveDebugOptionsSupport(t *testing.T) {
 	switch runtime.GOOS {
-	case "aix", "darwin", "ios", "dragonfly", "freebsd", "netbsd", "openbsd", "illumos", "solaris", "linux":
+	case "aix", "darwin", "ios", "dragonfly", "freebsd", "haiku", "netbsd", "openbsd", "illumos", "solaris", "linux":
 	default:
 		t.Skipf("skipping test: cpu feature options not supported by OS")
 	}

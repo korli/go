@@ -22,7 +22,7 @@ func GetRandom(p []byte, flags GetRandomFlag) (n int, err error) {
 	if len(p) == 0 {
 		return 0, nil
 	}
-	r1, _, errno := syscall6(uintptr(unsafe.Pointer(&libc_getentropy)),
+	_, _, errno := syscall6(uintptr(unsafe.Pointer(&libc_getentropy)),
 		2,
 		uintptr(unsafe.Pointer(&p[0])),
 		uintptr(len(p)),
@@ -30,6 +30,6 @@ func GetRandom(p []byte, flags GetRandomFlag) (n int, err error) {
 	if errno != 0 {
 		return 0, errno
 	}
-	return int(r1), nil
+	return len(p), nil
 }
 

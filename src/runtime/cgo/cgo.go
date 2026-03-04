@@ -24,6 +24,12 @@ package cgo
 #cgo solaris LDFLAGS: -lsocket
 #cgo haiku LDFLAGS: -lroot -lbsd -lnetwork
 
+// Use -std=gnu90 to maintain portability;
+// we don't use c90 because that doesn't permit C++ line comments,
+// which is just too painful.
+// We don't do it on windows-386 because it causes test failures.
+#cgo (!windows||!386) CFLAGS: -std=gnu90
+
 #cgo solaris CPPFLAGS: -D_POSIX_PTHREAD_SEMANTICS
 
 */

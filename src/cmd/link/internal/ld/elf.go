@@ -695,26 +695,6 @@ func elfWriteMipsAbiFlags(ctxt *Link) int {
 	return int(sh.Size)
 }
 
-
-var ELF_COMMENT_HAIKU = "GCC: (GNU) 11.2.0"
-
-func elfhaikucomment(sh *ElfShdr, startva uint64, resoff uint64) int {
-	n := len(ELF_COMMENT_HAIKU) + 1
-	sh.Addr = startva + resoff - uint64(n)
-	sh.Off = resoff - uint64(n)
-	sh.Size = uint64(n)
-
-	return n
-}
-
-func elfwritehaikucomment(out *OutBuf) int {
-	sh := elfshname(".comment")
-	out.SeekSet(int64(sh.Off))
-	out.WriteString(ELF_COMMENT_HAIKU)
-	out.Write8(0)
-	return int(sh.Size)
-}
-
 func elfnote(sh *ElfShdr, startva uint64, resoff uint64, sizes ...int) int {
 	n := resoff % 4
 	// if section contains multiple notes (as is the case with FreeBSD signature),
@@ -744,6 +724,30 @@ func elfwritenotehdr(out *OutBuf, str string, namesz uint32, descsz uint32, tag 
 	out.Write32(tag)
 
 	return sh
+}
+
+var ELF_COMMENT_HAIKU = []byte("GCC: (GNU) 13.3.0\x00")
+
+func elfhaikucomment(sh *ElfShdr, startva uint64, resoff uint64) int {
+	n := len(ELF_COMMENT_HAIKU)
+	sh.Addr = startva + resoff - uint64(n)
+	sh.Off = resoff - uint64(n)
+	sh.Size = uint64(n)
+
+	return n
+}
+
+func elfwritehaikucomment(out *OutBuf) int {
+	// Write Elf_Note header.
+	sh := elfwritenotehdr(out, ".comment", uint32(len(ELF_COMMENT_HAIKU)), 0, 0)
+
+	if sh == nil {
+		return 0
+	}
+
+	out.SeekSet(int64(sh.Off))
+	out.Write(ELF_COMMENT_HAIKU)
+	return int(sh.Size)
 }
 
 // NetBSD Signature (as per sys/exec_elf.h)
@@ -2339,9 +2343,9 @@ elfobj:
 		if *flagBuildid != "" {
 			a += int64(elfwritegobuildid(ctxt.Out))
 		}
-	}
-	if ctxt.HeadType == objabi.Hhaiku {
-		a += int64(elfwritehaikucomment(ctxt.Out))
+		if ctxt.HeadType == objabi.Hhaiku {
+			a += int64(elfwritehaikucomment(ctxt.Out))
+		}
 	}
 	if *flagRace && ctxt.IsNetbsd() {
 		a += int64(elfwritenetbsdpax(ctxt.Out))

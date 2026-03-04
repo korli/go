@@ -7,7 +7,6 @@ package syscall
 
 import "unsafe"
 
-//go:cgo_import_dynamic libc_accept4 accept4 "libnetwork.so"
 //go:cgo_import_dynamic libc_Getcwd getcwd "libroot.so"
 //go:cgo_import_dynamic libc_Getgroups getgroups "libroot.so"
 //go:cgo_import_dynamic libc_Setgroups setgroups "libroot.so"
@@ -96,7 +95,6 @@ import "unsafe"
 //go:cgo_import_dynamic libc_Recvmsg recvmsg "libnetwork.so"
 //go:cgo_import_dynamic libc_Utimensat utimensat "libroot.so"
 
-//go:linkname libc_accept4 libc_accept4
 //go:linkname libc_Getcwd libc_Getcwd
 //go:linkname libc_Getgroups libc_Getgroups
 //go:linkname libc_Setgroups libc_Setgroups
@@ -188,7 +186,6 @@ import "unsafe"
 type libcFunc uintptr
 
 var (
-	libc_accept4,
 	libc_Getcwd,
 	libc_Getgroups,
 	libc_Setgroups,
@@ -277,15 +274,6 @@ var (
 	libc_Recvmsg,
 	libc_Utimensat libcFunc
 )
-
-func accept4(s int, rsa *RawSockaddrAny, addrlen *_Socklen, flags int) (fd int, err error) {
-	r0, _, e1 := sysvicall6(uintptr(unsafe.Pointer(&libc_accept4)), 4, uintptr(s), uintptr(unsafe.Pointer(rsa)), uintptr(unsafe.Pointer(addrlen)), uintptr(flags), 0, 0)
-	fd = int(r0)
-	if e1 != 0 {
-		err = errnoErr(e1)
-	}
-	return
-}
 
 func Getcwd(buf []byte) (n int, err error) {
 	var _p0 *byte

@@ -8488,6 +8488,17 @@ func rewriteValuegeneric_OpEq8(v *Value) bool {
 func rewriteValuegeneric_OpEqB(v *Value) bool {
 	v_1 := v.Args[1]
 	v_0 := v.Args[0]
+	// match: (EqB x x)
+	// result: (ConstBool [true])
+	for {
+		x := v_0
+		if x != v_1 {
+			break
+		}
+		v.reset(OpConstBool)
+		v.AuxInt = boolToAuxInt(true)
+		return true
+	}
 	// match: (EqB (ConstBool [c]) (ConstBool [d]))
 	// result: (ConstBool [c == d])
 	for {
@@ -8529,6 +8540,21 @@ func rewriteValuegeneric_OpEqB(v *Value) bool {
 			}
 			x := v_1
 			v.copyOf(x)
+			return true
+		}
+		break
+	}
+	// match: (EqB (Not x) y)
+	// result: (NeqB x y)
+	for {
+		for _i0 := 0; _i0 <= 1; _i0, v_0, v_1 = _i0+1, v_1, v_0 {
+			if v_0.Op != OpNot {
+				continue
+			}
+			x := v_0.Args[0]
+			y := v_1
+			v.reset(OpNeqB)
+			v.AddArg2(x, y)
 			return true
 		}
 		break
@@ -11985,6 +12011,37 @@ func rewriteValuegeneric_OpLoad(v *Value) bool {
 			break
 		}
 		v.copyOf(x)
+		return true
+	}
+	// match: (Load <t1> op:(OffPtr [o1] p1) move:(Move [n] p2 src mem))
+	// cond: o1 >= 0 && o1+t1.Size() <= n && isSamePtr(p1, p2) && !isVolatile(src)
+	// result: @move.Block (Load <t1> (OffPtr <op.Type> [o1] src) mem)
+	for {
+		t1 := v.Type
+		op := v_0
+		if op.Op != OpOffPtr {
+			break
+		}
+		o1 := auxIntToInt64(op.AuxInt)
+		p1 := op.Args[0]
+		move := v_1
+		if move.Op != OpMove {
+			break
+		}
+		n := auxIntToInt64(move.AuxInt)
+		mem := move.Args[2]
+		p2 := move.Args[0]
+		src := move.Args[1]
+		if !(o1 >= 0 && o1+t1.Size() <= n && isSamePtr(p1, p2) && !isVolatile(src)) {
+			break
+		}
+		b = move.Block
+		v0 := b.NewValue0(v.Pos, OpLoad, t1)
+		v.copyOf(v0)
+		v1 := b.NewValue0(v.Pos, OpOffPtr, op.Type)
+		v1.AuxInt = int64ToAuxInt(o1)
+		v1.AddArg(src)
+		v0.AddArg2(v1, mem)
 		return true
 	}
 	// match: (Load <t1> p1 (Store {t2} p2 (Const64 [x]) _))
@@ -19671,6 +19728,17 @@ func rewriteValuegeneric_OpNeq8(v *Value) bool {
 func rewriteValuegeneric_OpNeqB(v *Value) bool {
 	v_1 := v.Args[1]
 	v_0 := v.Args[0]
+	// match: (NeqB x x)
+	// result: (ConstBool [false])
+	for {
+		x := v_0
+		if x != v_1 {
+			break
+		}
+		v.reset(OpConstBool)
+		v.AuxInt = boolToAuxInt(false)
+		return true
+	}
 	// match: (NeqB (ConstBool [c]) (ConstBool [d]))
 	// result: (ConstBool [c != d])
 	for {
@@ -19716,19 +19784,16 @@ func rewriteValuegeneric_OpNeqB(v *Value) bool {
 		}
 		break
 	}
-	// match: (NeqB (Not x) (Not y))
-	// result: (NeqB x y)
+	// match: (NeqB (Not x) y)
+	// result: (EqB x y)
 	for {
 		for _i0 := 0; _i0 <= 1; _i0, v_0, v_1 = _i0+1, v_1, v_0 {
 			if v_0.Op != OpNot {
 				continue
 			}
 			x := v_0.Args[0]
-			if v_1.Op != OpNot {
-				continue
-			}
-			y := v_1.Args[0]
-			v.reset(OpNeqB)
+			y := v_1
+			v.reset(OpEqB)
 			v.AddArg2(x, y)
 			return true
 		}
@@ -30029,7 +30094,7 @@ func rewriteValuegeneric_OpSelectN(v *Value) bool {
 		return true
 	}
 	// match: (SelectN [0] call:(StaticCall {sym} sptr (Const64 [c]) mem))
-	// cond: isInlinableMemclr(config, int64(c)) && isSameCall(sym, "runtime.memclrNoHeapPointers") && call.Uses == 1 && clobber(call)
+	// cond: isInlinableMemclr(config, int64(c)) && (isSameCall(sym, "runtime.memclrNoHeapPointers") || isSameCall(sym, "runtime.memclrNoHeapPointersPreemptible")) && call.Uses == 1 && clobber(call)
 	// result: (Zero {types.Types[types.TUINT8]} [int64(c)] sptr mem)
 	for {
 		if auxIntToInt64(v.AuxInt) != 0 {
@@ -30047,7 +30112,7 @@ func rewriteValuegeneric_OpSelectN(v *Value) bool {
 			break
 		}
 		c := auxIntToInt64(call_1.AuxInt)
-		if !(isInlinableMemclr(config, int64(c)) && isSameCall(sym, "runtime.memclrNoHeapPointers") && call.Uses == 1 && clobber(call)) {
+		if !(isInlinableMemclr(config, int64(c)) && (isSameCall(sym, "runtime.memclrNoHeapPointers") || isSameCall(sym, "runtime.memclrNoHeapPointersPreemptible")) && call.Uses == 1 && clobber(call)) {
 			break
 		}
 		v.reset(OpZero)
@@ -30057,7 +30122,7 @@ func rewriteValuegeneric_OpSelectN(v *Value) bool {
 		return true
 	}
 	// match: (SelectN [0] call:(StaticCall {sym} sptr (Const32 [c]) mem))
-	// cond: isInlinableMemclr(config, int64(c)) && isSameCall(sym, "runtime.memclrNoHeapPointers") && call.Uses == 1 && clobber(call)
+	// cond: isInlinableMemclr(config, int64(c)) && (isSameCall(sym, "runtime.memclrNoHeapPointers") || isSameCall(sym, "runtime.memclrNoHeapPointersPreemptible")) && call.Uses == 1 && clobber(call)
 	// result: (Zero {types.Types[types.TUINT8]} [int64(c)] sptr mem)
 	for {
 		if auxIntToInt64(v.AuxInt) != 0 {
@@ -30075,7 +30140,7 @@ func rewriteValuegeneric_OpSelectN(v *Value) bool {
 			break
 		}
 		c := auxIntToInt32(call_1.AuxInt)
-		if !(isInlinableMemclr(config, int64(c)) && isSameCall(sym, "runtime.memclrNoHeapPointers") && call.Uses == 1 && clobber(call)) {
+		if !(isInlinableMemclr(config, int64(c)) && (isSameCall(sym, "runtime.memclrNoHeapPointers") || isSameCall(sym, "runtime.memclrNoHeapPointersPreemptible")) && call.Uses == 1 && clobber(call)) {
 			break
 		}
 		v.reset(OpZero)

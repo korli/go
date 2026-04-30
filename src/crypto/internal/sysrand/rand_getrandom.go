@@ -36,6 +36,8 @@ func read(b []byte) error {
 	// https://docs.oracle.com/cd/E88353_01/html/E37841/getrandom-2.html
 	if runtime.GOOS == "solaris" {
 		maxSize = 133120
+	} else if runtime.GOOS == "haiku" {
+		maxSize = 256
 	}
 
 	for len(b) > 0 {

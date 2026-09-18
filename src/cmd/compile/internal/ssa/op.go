@@ -46,6 +46,8 @@ type opInfo struct {
 	zeroWidth         bool      // op never translates into any machine code. example: copy, which may sometimes translate to machine code, is not zero-width.
 	unsafePoint       bool      // this op is an unsafe point, i.e. not safe for async preemption
 	fixedReg          bool      // this op will be assigned a fixed register
+	addrSinkArg0      bool      // the address in arg0 does not propagate to the result
+	addrSinkArg1      bool      // the address in arg1 does not propagate to the result
 	symEffect         SymEffect // effect this op has on symbol in aux
 	scale             uint8     // amd64/386 indexed load scale
 }
@@ -381,6 +383,7 @@ const (
 	auxS390XCCMask            // aux is a s390x 4-bit condition code mask
 	auxS390XCCMaskInt8        // aux is a s390x 4-bit condition code mask, auxInt is an int8 immediate
 	auxS390XCCMaskUint8       // aux is a s390x 4-bit condition code mask, auxInt is a uint8 immediate
+	auxSizeAndAlign           // auxInt is an int64 size, aux is an int64 alignment
 )
 
 // A SymEffect describes the effect that an SSA Value has on the variable

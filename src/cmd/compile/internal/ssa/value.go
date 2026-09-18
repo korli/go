@@ -152,6 +152,10 @@ func (v *Value) AuxArm64ConditionalParams() arm64ConditionalParams {
 	return auxIntToArm64ConditionalParams(v.AuxInt)
 }
 
+func (v *Value) AuxSizeAndAlign() (int64, int64) {
+	return v.AuxInt, int64(v.Aux.(int64Aux))
+}
+
 // long form print.  v# = opcode <type> [aux] args [: reg] (names)
 func (v *Value) LongString() string {
 	if v == nil {
@@ -250,6 +254,8 @@ func (v *Value) auxString() string {
 		return fmt.Sprintf(" {%v}", v.Aux)
 	case auxFlagConstant:
 		return fmt.Sprintf("[%s]", flagConstant(v.AuxInt))
+	case auxSizeAndAlign:
+		return fmt.Sprintf(" [size=%d] {align=%d}", v.AuxInt, v.Aux)
 	case auxNone:
 		return ""
 	default:
@@ -664,4 +670,16 @@ func CanSSA(t *types.Type) bool {
 	default:
 		return true
 	}
+}
+
+// AddrSinkArg reports whether the idx'th argument is known
+// to not propagate to the output value.
+func (v *Value) AddrSinkArg(idx int) bool {
+	if idx == 0 {
+		return opcodeTable[v.Op].addrSinkArg0
+	}
+	if idx == 1 {
+		return opcodeTable[v.Op].addrSinkArg1
+	}
+	return false
 }

@@ -71,6 +71,8 @@ type opData struct {
 	zeroWidth         bool   // op never translates into any machine code. example: copy, which may sometimes translate to machine code, is not zero-width.
 	unsafePoint       bool   // this op is an unsafe point, i.e. not safe for async preemption
 	fixedReg          bool   // this op will be assigned a fixed register
+	addrSinkArg0      bool   // the address in arg0 does not propagate to the result
+	addrSinkArg1      bool   // the address in arg1 does not propagate to the result
 	symEffect         string // effect this op has on symbol in aux
 	scale             uint8  // amd64/386 indexed load scale
 }
@@ -340,13 +342,13 @@ func genOp() {
 			}
 			if v.faultOnNilArg0 {
 				fmt.Fprintln(w, "faultOnNilArg0: true,")
-				if v.aux != "Sym" && v.aux != "SymOff" && v.aux != "SymValAndOff" && v.aux != "Int64" && v.aux != "Int32" && v.aux != "" {
+				if v.aux != "Sym" && v.aux != "SymOff" && v.aux != "SymValAndOff" && v.aux != "Int64" && v.aux != "Int32" && v.aux != "SizeAndAlign" && v.aux != "" {
 					log.Fatalf("faultOnNilArg0 with aux %s not allowed", v.aux)
 				}
 			}
 			if v.faultOnNilArg1 {
 				fmt.Fprintln(w, "faultOnNilArg1: true,")
-				if v.aux != "Sym" && v.aux != "SymOff" && v.aux != "SymValAndOff" && v.aux != "Int64" && v.aux != "Int32" && v.aux != "" {
+				if v.aux != "Sym" && v.aux != "SymOff" && v.aux != "SymValAndOff" && v.aux != "Int64" && v.aux != "Int32" && v.aux != "SizeAndAlign" && v.aux != "" {
 					log.Fatalf("faultOnNilArg1 with aux %s not allowed", v.aux)
 				}
 			}
@@ -358,6 +360,12 @@ func genOp() {
 			}
 			if v.fixedReg {
 				fmt.Fprintln(w, "fixedReg: true,")
+			}
+			if v.addrSinkArg0 {
+				fmt.Fprintln(w, "addrSinkArg0: true,")
+			}
+			if v.addrSinkArg1 {
+				fmt.Fprintln(w, "addrSinkArg1: true,")
 			}
 			if v.unsafePoint {
 				fmt.Fprintln(w, "unsafePoint: true,")

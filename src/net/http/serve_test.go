@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"internal/synctest"
 	"internal/testenv"
 	"io"
 	"log"
@@ -44,6 +43,7 @@ import (
 	"sync/atomic"
 	"syscall"
 	"testing"
+	"testing/synctest"
 	"time"
 )
 
@@ -813,6 +813,92 @@ func testServerTimeoutsWithTimeout(t *testing.T, timeout time.Duration, mode tes
 		}
 	}
 	return nil
+}
+
+func TestServerUnencryptedHTTP2HeaderTimeout(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		f    func(*fakeNetConn)
+	}{{
+		name: "client sends nothing",
+		f: func(conn *fakeNetConn) {
+		},
+	}, {
+		name: "client sends slowly",
+		f: func(conn *fakeNetConn) {
+			// Trickling out writes should not extend the deadline.
+			conn.Write([]byte("PRI"))
+			time.Sleep(100 * time.Millisecond)
+			conn.Write([]byte(" * "))
+			time.Sleep(100 * time.Millisecond)
+			conn.Write([]byte("HTT"))
+			time.Sleep(100 * time.Millisecond)
+		},
+	}, {
+		name: "header read expires",
+		f: func(conn *fakeNetConn) {
+			// Time spent waiting for the HTTP/2 preface should count against
+			// time spent waiting for HTTP/1 headers.
+			time.Sleep(100 * time.Millisecond)
+			conn.Write([]byte("GET / HTTP/1.1\r\nHost: example.tld\r\n"))
+		},
+	}} {
+		t.Run(test.name, func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				listener := fakeNetListen()
+				defer listener.Close()
+
+				srv := &Server{
+					Protocols:         new(Protocols),
+					ReadHeaderTimeout: 1 * time.Second,
+				}
+				srv.Protocols.SetHTTP1(true)
+				srv.Protocols.SetUnencryptedHTTP2(true)
+				go srv.Serve(listener)
+
+				conn := listener.connect()
+				go test.f(conn)
+
+				start := time.Now()
+				_, err := io.ReadAll(conn)
+				if err != nil {
+					t.Errorf("ReadAll from server: %v, want EOF", err)
+				}
+				if got, want := time.Since(start), srv.ReadHeaderTimeout; got != want {
+					t.Errorf("connection closed after %v, want %v", got, want)
+				}
+			})
+		})
+	}
+}
+
+func TestServerReadHeaderTimeoutIsCleared(t *testing.T) {
+	runSynctest(t, testServerReadHeaderTimeoutIsCleared,
+		testAddMode{http2UnencryptedMode})
+}
+func testServerReadHeaderTimeoutIsCleared(t *testing.T, mode testMode) {
+	const timeout = time.Second
+	cst := newClientServerTest(t, mode, HandlerFunc(func(w ResponseWriter, r *Request) {
+		w.WriteHeader(200)
+		NewResponseController(w).Flush()
+		time.Sleep(2 * timeout)
+		io.WriteString(w, "ok")
+	}), func(s *Server) {
+		s.ReadHeaderTimeout = timeout
+	}, optFakeNet)
+
+	res, err := cst.c.Get(cst.ts.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := io.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		t.Fatalf("reading response body after ReadHeaderTimeout: %v", err)
+	}
+	if want := "ok"; string(got) != want {
+		t.Fatalf("response body = %q, want %q", got, want)
+	}
 }
 
 func TestServerReadTimeout(t *testing.T) { run(t, testServerReadTimeout) }

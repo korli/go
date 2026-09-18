@@ -290,6 +290,15 @@ func UtimesNano(path string, ts []Timespec) error {
 
 //sys	fcntl(fd int, cmd int, arg int) (val int, err error)
 
+// FcntlInt performs a fcntl syscall on fd with the given cmd and integer
+// arg, returning the raw result (e.g. the flags word for F_GETFL/F_GETFD).
+// Exported so packages outside syscall (such as golang.org/x/sys/unix) can
+// reach the fcntl(2) libc call without reimplementing the dynamic
+// libroot.so calling convention that fcntl below already uses.
+func FcntlInt(fd uintptr, cmd int, arg int) (int, error) {
+	return fcntl(int(fd), cmd, arg)
+}
+
 // FcntlFlock performs a fcntl syscall for the F_GETLK, F_SETLK or F_SETLKW command.
 func FcntlFlock(fd uintptr, cmd int, lk *Flock_t) error {
 	_, _, e1 := sysvicall6(uintptr(unsafe.Pointer(&libc_Fcntl)), 3, uintptr(fd), uintptr(cmd), uintptr(unsafe.Pointer(lk)), 0, 0, 0)

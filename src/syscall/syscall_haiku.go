@@ -447,6 +447,7 @@ func sendmsgN(fd int, p, oob []byte, ptr unsafe.Pointer, salen _Socklen, flags i
 //sys	Fpathconf(fd int, name int) (val int, err error)
 //sys	Fstat(fd int, stat *Stat_t) (err error) = libroot.fstat#LIBROOT_1_ALPHA1
 //sysnb	Getgid() (gid int)
+//sysnb	Getpgid(pid int) (pgid int, err error)
 //sysnb	Getpid() (pid int)
 //sys	Geteuid() (euid int)
 //sys	Getegid() (egid int)

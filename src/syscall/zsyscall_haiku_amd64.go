@@ -30,6 +30,7 @@ import "unsafe"
 //go:cgo_import_dynamic libc_Fpathconf fpathconf "libroot.so"
 //go:cgo_import_dynamic libc_Fstat fstat#LIBROOT_1_ALPHA1 "libroot.so"
 //go:cgo_import_dynamic libc_Getgid getgid "libroot.so"
+//go:cgo_import_dynamic libc_Getpgid getpgid "libroot.so"
 //go:cgo_import_dynamic libc_Getpid getpid "libroot.so"
 //go:cgo_import_dynamic libc_Geteuid geteuid "libroot.so"
 //go:cgo_import_dynamic libc_Getegid getegid "libroot.so"
@@ -118,6 +119,7 @@ import "unsafe"
 //go:linkname libc_Fpathconf libc_Fpathconf
 //go:linkname libc_Fstat libc_Fstat
 //go:linkname libc_Getgid libc_Getgid
+//go:linkname libc_Getpgid libc_Getpgid
 //go:linkname libc_Getpid libc_Getpid
 //go:linkname libc_Geteuid libc_Geteuid
 //go:linkname libc_Getegid libc_Getegid
@@ -209,6 +211,7 @@ var (
 	libc_Fpathconf,
 	libc_Fstat,
 	libc_Getgid,
+	libc_Getpgid,
 	libc_Getpid,
 	libc_Geteuid,
 	libc_Getegid,
@@ -491,6 +494,15 @@ func Fstat(fd int, stat *Stat_t) (err error) {
 func Getgid() (gid int) {
 	r0, _, _ := rawSysvicall6(uintptr(unsafe.Pointer(&libc_Getgid)), 0, 0, 0, 0, 0, 0, 0)
 	gid = int(r0)
+	return
+}
+
+func Getpgid(pid int) (pgid int, err error) {
+	r0, _, e1 := rawSysvicall6(uintptr(unsafe.Pointer(&libc_Getpgid)), 1, uintptr(pid), 0, 0, 0, 0, 0)
+	pgid = int(r0)
+	if e1 != 0 {
+		err = errnoErr(e1)
+	}
 	return
 }
 

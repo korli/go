@@ -14,13 +14,18 @@ func checkfds() {
 		return
 	}
 
-	const (
+	var (
 		// F_GETFD, EBADF, O_RDWR are standard across all unixes we support, so
 		// we define them here rather than in each of the OS specific files.
-		F_GETFD = 0x01
-		EBADF   = 0x09
-		O_RDWR  = 0x02
+		F_GETFD int32 = 0x01
+		EBADF   int32 = 0x09
+		O_RDWR  int32 = 0x02
 	)
+
+	if GOOS == "haiku" {
+		F_GETFD = 0x02
+		EBADF   = int32(0x7fffa000)
+	}
 
 	devNull := []byte("/dev/null\x00")
 	for i := 0; i < 3; i++ {

@@ -148,6 +148,7 @@ type ELFArch struct {
 	Linuxdynld     string
 	LinuxdynldMusl string
 	Freebsddynld   string
+	Haikudynld     string
 	Netbsddynld    string
 	Openbsddynld   string
 	Dragonflydynld string
@@ -722,6 +723,30 @@ func elfwritenotehdr(out *OutBuf, str string, namesz uint32, descsz uint32, tag 
 	out.Write32(tag)
 
 	return sh
+}
+
+var ELF_COMMENT_HAIKU = []byte("GCC: (GNU) 13.3.0\x00")
+
+func elfhaikucomment(sh *ElfShdr, startva uint64, resoff uint64) int {
+	n := len(ELF_COMMENT_HAIKU)
+	sh.Addr = startva + resoff - uint64(n)
+	sh.Off = resoff - uint64(n)
+	sh.Size = uint64(n)
+
+	return n
+}
+
+func elfwritehaikucomment(out *OutBuf) int {
+	// Write Elf_Note header.
+	sh := elfwritenotehdr(out, ".comment", uint32(len(ELF_COMMENT_HAIKU)), 0, 0)
+
+	if sh == nil {
+		return 0
+	}
+
+	out.SeekSet(int64(sh.Off))
+	out.Write(ELF_COMMENT_HAIKU)
+	return int(sh.Size)
 }
 
 // NetBSD Signature (as per sys/exec_elf.h)
@@ -1847,6 +1872,9 @@ func asmbElf(ctxt *Link) {
 			case objabi.Hfreebsd:
 				interpreter = thearch.ELF.Freebsddynld
 
+			case objabi.Hhaiku:
+				interpreter = thearch.ELF.Haikudynld
+
 			case objabi.Hnetbsd:
 				interpreter = thearch.ELF.Netbsddynld
 
@@ -1889,6 +1917,22 @@ func asmbElf(ctxt *Link) {
 		pnotei.Type = elf.PT_NOTE
 		pnotei.Flags = elf.PF_R
 		phsh(pnotei, sh)
+	}
+
+	if ctxt.HeadType == objabi.Hhaiku {
+		sh := elfshname(".comment")
+
+		sh.Type = uint32(elf.SHT_PROGBITS)
+		sh.Flags = uint64(elf.SHF_MERGE | elf.SHF_STRINGS)
+		sh.Addralign = 1
+		sh.Entsize = 1
+
+		resoff -= int64(elfhaikucomment(sh, uint64(startva), uint64(resoff)))
+
+		ph := newElfPhdr()
+		ph.Type = elf.PT_NOTE
+		ph.Flags = 0
+		phsh(ph, sh)
 	}
 
 	if len(buildinfo) > 0 {
@@ -2068,18 +2112,20 @@ func asmbElf(ctxt *Link) {
 		phsh(ph, sh)
 
 		// Thread-local storage segment (really just size).
-		tlssize := uint64(0)
-		for _, sect := range Segdata.Sections {
-			if sect.Name == ".tbss" {
-				tlssize = sect.Length
+		if ctxt.HeadType != objabi.Hhaiku {
+			tlssize := uint64(0)
+			for _, sect := range Segdata.Sections {
+				if sect.Name == ".tbss" {
+					tlssize = sect.Length
+				}
 			}
-		}
-		if tlssize != 0 {
-			ph := newElfPhdr()
-			ph.Type = elf.PT_TLS
-			ph.Flags = elf.PF_R
-			ph.Memsz = tlssize
-			ph.Align = uint64(ctxt.Arch.RegSize)
+			if tlssize != 0 {
+				ph := newElfPhdr()
+				ph.Type = elf.PT_TLS
+				ph.Flags = elf.PF_R
+				ph.Memsz = tlssize
+				ph.Align = uint64(ctxt.Arch.RegSize)
+			}
 		}
 	}
 
@@ -2291,6 +2337,9 @@ elfobj:
 		}
 		if *flagBuildid != "" {
 			a += int64(elfwritegobuildid(ctxt.Out))
+		}
+		if ctxt.HeadType == objabi.Hhaiku {
+			a += int64(elfwritehaikucomment(ctxt.Out))
 		}
 	}
 	if *flagRace && ctxt.IsNetbsd() {

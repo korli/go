@@ -20,10 +20,7 @@ package cgo
 #cgo openbsd LDFLAGS: -lpthread
 #cgo aix LDFLAGS: -Wl,-berok
 
-// Use -fno-stack-protector to avoid problems locating the
-// proper support functions. See issues #52919, #54313, #58385.
-// Use -Wdeclaration-after-statement because some CI builds use it.
-#cgo CFLAGS: -Wall -Werror -fno-stack-protector -Wdeclaration-after-statement
+#cgo haiku LDFLAGS: -lroot -lbsd -lnetwork
 
 // Use -std=gnu90 to maintain portability;
 // we don't use c90 because that doesn't permit C++ line comments,

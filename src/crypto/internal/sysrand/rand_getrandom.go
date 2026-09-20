@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build dragonfly || freebsd || linux || solaris
+//go:build dragonfly || freebsd || haiku || linux || solaris
 
 package sysrand
 
@@ -36,6 +36,8 @@ func read(b []byte) error {
 	// https://docs.oracle.com/cd/E88353_01/html/E37841/getrandom-2.html
 	if runtime.GOOS == "solaris" {
 		maxSize = 133120
+	} else if runtime.GOOS == "haiku" {
+		maxSize = 256
 	}
 
 	for len(b) > 0 {

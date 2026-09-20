@@ -17,6 +17,7 @@ import (
 	"errors"
 	"internal/bytealg"
 	"internal/godebug"
+	"internal/goos"
 	"internal/strconv"
 	"internal/stringslite"
 	"io"
@@ -366,6 +367,9 @@ type resolverConfig struct {
 var resolvConf resolverConfig
 
 func getSystemDNSConfig() *dnsConfig {
+	if goos.GOOS == "haiku" {
+		return getSystemDNSConfigNamed("/boot/system/settings/network/resolv.conf")
+	}
 	return getSystemDNSConfigNamed("/etc/resolv.conf")
 }
 
@@ -378,7 +382,11 @@ func getSystemDNSConfigNamed(path string) *dnsConfig {
 func (conf *resolverConfig) init() {
 	// Set dnsConfig and lastChecked so we don't parse
 	// resolv.conf twice the first time.
-	conf.dnsConfig.Store(dnsReadConfig("/etc/resolv.conf"))
+	if goos.GOOS == "haiku" {
+		conf.dnsConfig.Store(dnsReadConfig("/boot/system/settings/network/resolv.conf"))
+	} else {
+		conf.dnsConfig.Store(dnsReadConfig("/etc/resolv.conf"))
+	}
 	conf.lastChecked = time.Now()
 
 	// Prepare ch so that only one update of resolverConfig may

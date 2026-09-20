@@ -112,6 +112,22 @@ func (ctxt *Link) computeTLSOffset() {
 		case sys.ARM64:
 			ctxt.Tlsoffset = 0 // dummy value, not needed
 		}
+
+	case objabi.Hhaiku:
+		/*
+		 * Haiku system constants
+		 */
+		switch ctxt.Arch.Family {
+		default:
+			log.Fatalf("unknown thread-local storage offset for haiku/%s", ctxt.Arch.Name)
+
+		case sys.AMD64:
+			// on 64-bit we use the last two regular TLS slots
+			ctxt.Tlsoffset = (64 - 2) * 8
+
+		}
+
+
 	}
 
 }

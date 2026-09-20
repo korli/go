@@ -18,7 +18,7 @@ package net
 #include <arpa/nameser.h>
 #include <resolv.h>
 
-#cgo !aix,!dragonfly,!freebsd LDFLAGS: -lresolv
+#cgo !aix,!dragonfly,!freebsd,!haiku LDFLAGS: -lresolv
 */
 import "C"
 

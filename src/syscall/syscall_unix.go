@@ -108,13 +108,17 @@ func (m *mmapper) Munmap(data []byte) (err error) {
 type Errno uintptr
 
 func (e Errno) Error() string {
-	if 0 <= int(e) && int(e) < len(errors) {
-		s := errors[e]
+	var n = int(e)
+	if runtime.GOOS == "haiku" {
+		n = n & 0x7fffffff + 1
+	}
+	if 0 <= n && n < len(errors) {
+		s := errors[n]
 		if s != "" {
 			return s
 		}
 	}
-	return "errno " + strconv.Itoa(int(e))
+	return "errno " + strconv.Itoa(n)
 }
 
 func (e Errno) Is(target error) bool {

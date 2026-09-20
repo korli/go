@@ -1685,7 +1685,7 @@ func TestNewFileShortReader(t *testing.T) {
 
 func TestLargeNumberOfSegments(t *testing.T) {
 	switch runtime.GOOS {
-	case "dragonfly", "freebsd", "linux", "netbsd", "openbsd", "solaris":
+	case "dragonfly", "freebsd", "haiku", "linux", "netbsd", "openbsd", "solaris":
 	default:
 		t.Skipf("ELF binaries not generated on %s", runtime.GOOS)
 	}

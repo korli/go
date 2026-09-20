@@ -354,21 +354,28 @@ func anyToSockaddr(rsa *RawSockaddrAny) (Sockaddr, error) {
 
 //go:cgo_ldflag "-lnetwork"
 
-//sys	accept(s int, rsa *RawSockaddrAny, addrlen *_Socklen) (fd int, err error) = libnetwork.accept
-
 func Accept(fd int) (nfd int, sa Sockaddr, err error) {
+	return Accept4(fd, 0)
+}
+
+//sys   accept4(s int, rsa *RawSockaddrAny, addrlen *_Socklen, flags int) (fd int, err error) = libsocket.accept4
+
+func Accept4(fd int, flags int) (int, Sockaddr, error) {
 	var rsa RawSockaddrAny
-	var len _Socklen = SizeofSockaddrAny
-	nfd, err = accept(fd, &rsa, &len)
+	var addrlen _Socklen = SizeofSockaddrAny
+	nfd, err := accept4(fd, &rsa, &addrlen, flags)
 	if err != nil {
-		return
+		return 0, nil, err
 	}
-	sa, err = anyToSockaddr(&rsa)
+	if addrlen > SizeofSockaddrAny {
+		panic("RawSockaddrAny too small")
+	}
+	sa, err := anyToSockaddr(&rsa)
 	if err != nil {
 		Close(nfd)
-		nfd = 0
+		return 0, nil, err
 	}
-	return
+	return nfd, sa, nil
 }
 
 func recvmsgRaw(fd int, p, oob []byte, flags int, rsa *RawSockaddrAny) (n, oobn int, recvflags int, err error) {

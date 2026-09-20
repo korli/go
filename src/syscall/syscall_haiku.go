@@ -69,20 +69,23 @@ func direntNamlen(buf []byte) (uint64, bool) {
 }
 
 
-func pipe() (r uintptr, w uintptr, err uintptr)
-
 func Pipe(p []int) (err error) {
+	return Pipe2(p, 0)
+}
+
+//sysnb	pipe2(p *[2]_C_int, flags int) (err error)
+
+func Pipe2(p []int, flags int) error {
 	if len(p) != 2 {
 		return EINVAL
 	}
-	r0, w0, e1 := pipe()
-	if e1 != 0 {
-		err = Errno(e1)
-	}
+	var pp [2]_C_int
+	err := pipe2(&pp, flags)
 	if err == nil {
-		p[0], p[1] = int(r0), int(w0)
+		p[0] = int(pp[0])
+		p[1] = int(pp[1])
 	}
-	return
+	return err
 }
 
 func (sa *SockaddrInet4) sockaddr() (unsafe.Pointer, _Socklen, error) {

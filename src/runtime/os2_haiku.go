@@ -51,7 +51,6 @@ import (
 //go:cgo_import_dynamic libc_sysconf sysconf#LIBROOT_1_ALPHA4 "libroot.so"
 //go:cgo_import_dynamic libc_usleep usleep "libroot.so"
 //go:cgo_import_dynamic libc_write write "libroot.so"
-//go:cgo_import_dynamic libc_pipe pipe "libroot.so"
 //go:cgo_import_dynamic libc_pipe2 pipe2 "libroot.so"
 //go:cgo_import_dynamic libc_area_for area_for "libroot.so"
 
@@ -89,7 +88,6 @@ import (
 //go:linkname libc_sysconf libc_sysconf
 //go:linkname libc_usleep libc_usleep
 //go:linkname libc_write libc_write
-//go:linkname libc_pipe libc_pipe
 //go:linkname libc_pipe2 libc_pipe2
 //go:linkname libc_area_for libc_area_for
 
@@ -129,7 +127,6 @@ var (
 	libc_usleep,
 	libc_write,
 	libc_area_for,
-	libc_pipe,
 	libc_pipe2 libcFunc
 )
 
@@ -595,13 +592,6 @@ func write1(fd uintptr, buf unsafe.Pointer, nbyte int32) int32 {
 		return c
 	}
 	return int32(err)
-}
-
-//go:nosplit
-func pipe() (r, w int32, errno int32) {
-	var p [2]int32
-	_, e := sysvicall1Err(&libc_pipe, uintptr(noescape(unsafe.Pointer(&p))))
-	return p[0], p[1], int32(e)
 }
 
 //go:nosplit

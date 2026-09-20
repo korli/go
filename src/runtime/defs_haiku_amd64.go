@@ -78,6 +78,7 @@ const (
 	_HOST_NAME_MAX = 0xff
 
 	_O_NONBLOCK = 0x80
+	_O_CLOEXEC  = 0x40
 	_FD_CLOEXEC = 0x1
 	_F_GETFL    = 0x8
 	_F_SETFL    = 0x10

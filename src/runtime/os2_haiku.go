@@ -10,19 +10,17 @@ import (
 	"unsafe"
 )
 
-// Remove
-//libc_madvise,
-
 //go:cgo_export_dynamic runtime.end _end
 //go:cgo_export_dynamic runtime.etext _etext
 //go:cgo_export_dynamic runtime.edata _edata
 
 //go:cgo_import_dynamic libc__errnop _errnop "libroot.so"
 //go:cgo_import_dynamic libc_clock_gettime clock_gettime "libroot.so"
-//go:cgo_import_dynamic libc_exit exit "libroot.so"
+//go:cgo_import_dynamic libc_exit _exit "libroot.so"
 //go:cgo_import_dynamic libc_fstat fstat#LIBROOT_1_ALPHA1 "libroot.so"
 //go:cgo_import_dynamic libc_getcontext getcontext "libroot.so"
 //go:cgo_import_dynamic libc_kill kill "libroot.so"
+//go:cgo_import_dynamic libc_madvise madvise "libroot.so"
 //go:cgo_import_dynamic libc_getrlimit getrlimit "libroot.so"
 //go:cgo_import_dynamic libc_malloc malloc "libroot.so"
 //go:cgo_import_dynamic libc_mmap mmap "libroot.so"
@@ -60,6 +58,7 @@ import (
 //go:linkname libc_fstat libc_fstat
 //go:linkname libc_getcontext libc_getcontext
 //go:linkname libc_kill libc_kill
+//go:linkname libc_madvise libc_madvise
 //go:linkname libc_getrlimit libc_getrlimit
 //go:linkname libc_malloc libc_malloc
 //go:linkname libc_mmap libc_mmap
@@ -99,6 +98,7 @@ var (
 	libc_getcontext,
 	libc_getrlimit,
 	libc_kill,
+	libc_madvise,
 	libc_malloc,
 	libc_mmap,
 	libc_munmap,
@@ -405,10 +405,10 @@ func getcontext(context *ucontext) /* int32 */ {
 	sysvicall1(&libc_getcontext, uintptr(unsafe.Pointer(context)))
 }
 
-/////go:nosplit
-// func madvise(addr unsafe.Pointer, n uintptr, flags int32) {
-// 	sysvicall3(&libc_madvise, uintptr(addr), uintptr(n), uintptr(flags))
-// }
+//go:nosplit
+func madvise(addr unsafe.Pointer, n uintptr, flags int32) {
+	sysvicall3(&libc_madvise, uintptr(addr), uintptr(n), uintptr(flags))
+}
 
 //go:nosplit
 func mmap(addr unsafe.Pointer, n uintptr, prot, flags, fd int32, off uint32) (unsafe.Pointer, int) {

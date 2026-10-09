@@ -28,7 +28,7 @@ type mOS struct {
 }
 
 const (
-	_SS_DISABLE  = 4
+	_SS_DISABLE  = 2
 	_NSIG        = 33
 	_SI_USER     = 0
 	_SIG_SETMASK = 3 // Modified for Haiku support

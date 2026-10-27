@@ -26,6 +26,7 @@ my $tags = "";  # build tags
 my $newtags = ""; # new style build tags
 my $aix = 0;
 my $solaris = 0;
+my $haiku = 0;
 
 binmode STDOUT;
 
@@ -44,6 +45,10 @@ if($ARGV[0] eq "-solaris") {
 	$solaris = 1;
 	shift;
 }
+if($ARGV[0] eq "-haiku") {
+	$haiku = 1;
+	shift;
+}
 if($ARGV[0] eq "-tags") {
 	shift;
 	$tags = $ARGV[0];
@@ -52,7 +57,7 @@ if($ARGV[0] eq "-tags") {
 
 
 if($ARGV[0] =~ /^-/) {
-	print STDERR "usage: mksyscall_libc.pl [-b32 | -l32] [-aix | -solaris] [-tags x,y] [file ...]\n";
+	print STDERR "usage: mksyscall_libc.pl [-b32 | -l32] [-aix | -solaris | -haiku] [-tags x,y] [file ...]\n";
 	exit 1;
 }
 
@@ -96,12 +101,21 @@ while(<>) {
 	# Line must be of the form
 	#	func Open(path string, mode int, perm int) (fd int, err error)
 	# Split into name, in params, out params.
-	if(!/^\/\/sys(nb)? (\w+)\(([^()]*)\)\s*(?:\(([^()]+)\))?\s*(?:=\s*(?:(\w*)\.)?(\w*))?$/) {
+	my ($nb, $func, $in, $out, $modname, $sysname, $version);
+	if ($haiku) {
+		if(!/^\/\/sys(nb)? (\w+)\(([^()]*)\)\s*(?:\(([^()]+)\))?\s*(?:=\s*(?:(\w*)\.)?(\w*)(#\w+)?)?$/) {
+			print STDERR "$ARGV:$.: malformed //sys declaration\n";
+			$errors = 1;
+			next;
+		}
+		($nb, $func, $in, $out, $modname, $sysname, $version) = ($1, $2, $3, $4, $5, $6, $7);
+	} elsif(!/^\/\/sys(nb)? (\w+)\(([^()]*)\)\s*(?:\(([^()]+)\))?\s*(?:=\s*(?:(\w*)\.)?(\w*))?$/) {
 		print STDERR "$ARGV:$.: malformed //sys declaration\n";
 		$errors = 1;
 		next;
+	} else {
+		($nb, $func, $in, $out, $modname, $sysname) = ($1, $2, $3, $4, $5, $6);
 	}
-	my ($nb, $func, $in, $out, $modname, $sysname) = ($1, $2, $3, $4, $5, $6);
 
 	# Split argument lists on comma.
 	my @in = parseparamlist($in);
@@ -130,6 +144,13 @@ while(<>) {
 		$modname .= ".so";
 
 	}
+	if($haiku) {
+		if($modname eq "") {
+			$modname = "libroot";
+		}
+		$modname .= ".so";
+
+	}
 
 	# System call name.
 	if($sysname eq "") {
@@ -138,6 +159,9 @@ while(<>) {
 
 	# System call pointer variable name.
 	my $sysvarname = "libc_${sysname}";
+	if($haiku) {
+		$sysvarname = "libc_" . ucfirst($sysname);
+	}
 
 	my $strconvfunc = "BytePtrFromString";
 	my $strconvtype = "*byte";
@@ -146,7 +170,7 @@ while(<>) {
 
 	# Runtime import of function to allow cross-platform builds.
 	if($dynimports !~ /\s+${sysvarname}\s+/) {
-		$dynimports .= "//go:cgo_import_dynamic ${sysvarname} ${sysname} \"$modname\"\n";
+		$dynimports .= "//go:cgo_import_dynamic ${sysvarname} ${sysname}${version} \"$modname\"\n";
 		# Link symbol to proc address variable.
 		$linknames .= "//go:linkname ${sysvarname} ${sysvarname}\n";
 		# Library proc address variable.

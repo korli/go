@@ -174,7 +174,7 @@ freebsd_riscv64)
 	mktypes="GOARCH=$GOARCH go tool cgo -godefs -- -fsigned-char"
 	;;
 haiku_amd64)
-	mksyscall="./mksyscall_haiku.pl"
+	mksyscall="./mksyscall_libc.pl -haiku"
 	mkerrors="$mkerrors -m64"
 	mksysnum=
 	mktypes="GOARCH=$GOARCH go tool cgo -godefs"

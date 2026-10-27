@@ -358,7 +358,7 @@ func Accept(fd int) (nfd int, sa Sockaddr, err error) {
 	return Accept4(fd, 0)
 }
 
-//sys   accept4(s int, rsa *RawSockaddrAny, addrlen *_Socklen, flags int) (fd int, err error) = libsocket.accept4
+//sys   accept4(s int, rsa *RawSockaddrAny, addrlen *_Socklen, flags int) (fd int, err error) = libnetwork.accept4
 
 func Accept4(fd int, flags int) (int, Sockaddr, error) {
 	var rsa RawSockaddrAny
@@ -464,6 +464,7 @@ func sendmsgN(fd int, p, oob []byte, ptr unsafe.Pointer, salen _Socklen, flags i
 //sys	Getppid() (ppid int)
 //sys	Getpriority(which int, who int) (n int, err error)
 //sysnb	Getrlimit(which int, lim *Rlimit) (err error)
+//sysnb	Getrusage(who int, rusage *Rusage) (err error) = libroot.getrusage#LIBROOT_1_BETA3
 //sysnb	Gettimeofday(tv *Timeval) (err error)
 //sysnb	Getuid() (uid int)
 //sys	Kill(pid int, signum Signal) (err error)

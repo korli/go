@@ -24,7 +24,7 @@ func checkfds() {
 
 	if GOOS == "haiku" {
 		F_GETFD = 0x02
-		EBADF   = int32(0x7fffa000)
+		EBADF   = int32(-0x7fffa000)
 	}
 
 	devNull := []byte("/dev/null\x00")

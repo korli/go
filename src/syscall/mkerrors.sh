@@ -417,7 +417,7 @@ echo 'const ('
 if [ "$(uname)" = "Haiku" ]
 then
 # FIXME: haiku: 64-bit?
-	cat _error.out | grep -f _error.grep | sed 's/=\(.*\)/= Errno(\1 \& 0xffffffff)/'
+	cat _error.out | grep -f _error.grep | sed 's/= -\(.*\)/= Errno(^uintptr\(\1 - 1\))/'
 else
 	cat _error.out | grep -f _error.grep | sed 's/=\(.*\)/= Errno(\1)/'
 fi
